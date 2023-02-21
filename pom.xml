@@ -8,18 +8,18 @@
         <version>2.7.5</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.dagshub</groupId>
-    <artifactId>HackaTON</artifactId>
+    <groupId>com.hackaton</groupId>
+    <artifactId>tonCash</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>DagsHubHomeAssignment</name>
-    <description>DagsHubHomeAssignment</description>
+    <name>tonCash</name>
+    <description>tonCash</description>
     <properties>
         <java.version>11</java.version>
     </properties>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

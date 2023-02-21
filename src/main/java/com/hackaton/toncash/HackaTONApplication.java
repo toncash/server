@@ -1,4 +1,4 @@
-package com.hackaton.hackatonchangeapp;
+package com.hackaton.toncash;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

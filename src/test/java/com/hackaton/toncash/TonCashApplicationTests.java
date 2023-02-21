@@ -1,10 +1,10 @@
-package com.hackaton.hackatonchangeapp;
+package com.hackaton.toncash;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DagsHubHomeAssignmentApplicationTests {
+class TonCashApplicationTests {
 
     @Test
     void contextLoads() {

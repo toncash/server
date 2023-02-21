@@ -1,6 +1,6 @@
-package com.hackaton.hackatonchangeapp.repo;
+package com.hackaton.toncash.repo;
 
-import com.hackaton.hackatonchangeapp.model.Order;
+import com.hackaton.toncash.model.Order;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

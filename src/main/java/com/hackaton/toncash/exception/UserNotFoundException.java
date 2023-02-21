@@ -1,4 +1,4 @@
-package com.hackaton.hackatonchangeapp.exception;
+package com.hackaton.toncash.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -11,8 +11,8 @@ public class UserNotFoundException extends RuntimeException {
 	 */
 	private static final long serialVersionUID = -8393111568194403751L;
 
-	public UserNotFoundException(String username) {
-		super("User with username " + username + " doesn't exist");
+	public UserNotFoundException(long id) {
+		super("User with id " + id + " doesn't exist");
 	}
 
 }
