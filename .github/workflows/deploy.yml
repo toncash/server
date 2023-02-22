@@ -1,0 +1,24 @@
+#name: Deploy Function
+#
+#on:
+#  push:
+#    branches:
+#      - master
+#  workflow_dispatch:
+#jobs:
+#  deploy:
+#    runs-on: ubuntu-latest
+#
+#    env:
+#      MONGODB_URI: mongodb+srv://tonCashUser:7fczZg1r7hpAL0di@cluster0.wwzl9bo.mongodb.net/TonCash?retryWrites=true&w=majority
+#      SUPABASE_ACCESS_TOKEN: sbp_0be34af75a8de8089cb30dc900dc51a99ba2272c
+#      PROJECT_ID: inzfjzzgqfstfznyyjst
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#
+#      - uses: supabase/setup-cli@v1
+#        with:
+#          version: 1.0.0
+#
+#      - run: supabase functions deploy toncash --project-ref $PROJECT_ID
