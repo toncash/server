@@ -1,9 +1,6 @@
 package com.hackaton.toncash.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Set;
 
@@ -11,12 +8,13 @@ import java.util.Set;
 @NoArgsConstructor
 @Getter
 @Setter
+@Builder
 public class PersonDTO {
     private long id;
     private String username;
     private Set<String> currentOrders;
-    private Set<String> finishedOrders;
-    private Set<String> badOrders;
+    private int finishedOrders;
+    private int badOrders;
     private Set<String> community;
     private float rank;
 

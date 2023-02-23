@@ -15,6 +15,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -43,21 +44,18 @@ public class PersonServiceImpl implements PersonService {
         } else if (!person.getUsername().equals(username)) {
             person.setUsername(username);
         }
-        return modelMapper.map(personRepository.save(person), PersonDTO.class);
+        return mapToPersonDTO(personRepository.save(person));
     }
 
     @Override
     public PersonDTO getPerson(long id) {
-        Person person = personRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
-        PersonDTO personDto = modelMapper.map(person, PersonDTO.class);
-
-        return modelMapper.map(person, PersonDTO.class);
+        return mapToPersonDTO(personRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)));
     }
 
     @Override
     public Iterable<PersonDTO> getPersons() {
         return StreamSupport.stream(personRepository.findAll().spliterator(), false)
-                .map(p -> modelMapper.map(p, PersonDTO.class))
+                .map(PersonServiceImpl::mapToPersonDTO)
                 .collect(Collectors.toList());
     }
 
@@ -72,26 +70,25 @@ public class PersonServiceImpl implements PersonService {
         Person person = personRepository.findById(personDTO.getId()).orElseThrow(() -> new UserExistException(id));
         BeanUtils.copyProperties(personDTO, person, CommonMethods.getNullPropertyNames(personDTO));
 
-        return modelMapper.map(personRepository.save(person), PersonDTO.class);
+        return mapToPersonDTO(personRepository.save(person));
 
     }
 
     @Override
     public PersonDTO addOrderToPerson(long userId, String orderId) {
         Person person = personRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
-        System.out.println("person" + person.getId());
-        System.out.println(person.getCurrentOrders().size());
         person.getCurrentOrders().add(orderId);
-        return modelMapper.map(personRepository.save(person), PersonDTO.class);
+        return mapToPersonDTO(personRepository.save(person));
     }
 
     @Override
     public PersonDTO removeOrderFromPerson(long userId, String orderId) {
         Person person = personRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         person.getCurrentOrders().remove(orderId);
-        return modelMapper.map(personRepository.save(person), PersonDTO.class);
+        return mapToPersonDTO(personRepository.save(person));
 
     }
+
 
     @Override
     public PersonDTO changeStatusOrderFromPerson(long userId, String orderId, OrderStatus orderStatus) {
@@ -99,12 +96,32 @@ public class PersonServiceImpl implements PersonService {
         if (orderStatus.equals(OrderStatus.FINISH)) {
             person.getCurrentOrders().remove(orderId);
             person.getFinishedOrders().add(orderId);
+//            person.getCommunity() // FIXME
         }
         if (orderStatus.equals(OrderStatus.BAD)) {
             person.getCurrentOrders().remove(orderId);
             person.getBadOrders().add(orderId);
         }
-        return modelMapper.map(personRepository.save(person), PersonDTO.class);
+        person.setRank(getRank(person));
+        return mapToPersonDTO(personRepository.save(person));
 
+    }
+
+    private float getRank(Person person) {
+        int countBadOrders = person.getBadOrders().size() != 0 ? person.getBadOrders().size() : 1;
+        return (person.getFinishedOrders().size() + person.getBadOrders().size()) * 1.0f / countBadOrders;
+
+    }
+
+    private static PersonDTO mapToPersonDTO(Person person) {
+        return PersonDTO.builder()
+                .id(person.getId())
+                .username(person.getUsername())
+                .currentOrders(person.getCurrentOrders())
+                .finishedOrders(person.getFinishedOrders().size())
+                .badOrders(person.getBadOrders().size())
+                .community(person.getCommunity())
+                .rank(person.getRank())
+                .build();
     }
 }
