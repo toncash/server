@@ -55,7 +55,7 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public Iterable<PersonDTO> getPersons() {
         return StreamSupport.stream(personRepository.findAll().spliterator(), false)
-                .map(PersonServiceImpl::mapToPersonDTO)
+                .map(this::mapToPersonDTO)
                 .collect(Collectors.toList());
     }
 
@@ -113,7 +113,7 @@ public class PersonServiceImpl implements PersonService {
 
     }
 
-    private static PersonDTO mapToPersonDTO(Person person) {
+    private PersonDTO mapToPersonDTO(Person person) {
         return PersonDTO.builder()
                 .id(person.getId())
                 .username(person.getUsername())
