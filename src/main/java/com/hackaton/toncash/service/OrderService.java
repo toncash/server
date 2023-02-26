@@ -1,11 +1,11 @@
 package com.hackaton.toncash.service;
 
 import com.hackaton.toncash.dto.OrderDTO;
-import com.hackaton.toncash.dto.PersonDTO;
+import com.hackaton.toncash.model.OrderStatus;
 import org.springframework.data.geo.Point;
 
 public interface OrderService {
-    OrderDTO createOrder(OrderDTO orderDto);
+    OrderDTO createOrder(OrderDTO orderDto, long personId);
 
     OrderDTO getOrder(String id);
 
@@ -17,7 +17,7 @@ public interface OrderService {
 
     OrderDTO changeOrder(String id, OrderDTO orderDTO);
 
-    void takeOrder(String orderId, long personId);
+    void changeOrderStatus(String orderId, long personId, OrderStatus status);
 
     void rejectOrder(String orderId, long personId);
 }

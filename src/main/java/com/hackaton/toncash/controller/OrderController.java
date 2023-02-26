@@ -1,13 +1,11 @@
 package com.hackaton.toncash.controller;
 
 import com.hackaton.toncash.dto.OrderDTO;
+import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.service.OrderService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.geo.Point;
 import org.springframework.web.bind.annotation.*;
-
-import java.awt.*;
-import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/orders")
@@ -18,8 +16,8 @@ public class OrderController {
 
 
     @PostMapping
-    public OrderDTO createOrder(@RequestBody OrderDTO orderDto) {
-        return orderService.createOrder(orderDto);
+    public OrderDTO createOrder(@RequestBody OrderDTO orderDto, @RequestParam long personId) {
+        return orderService.createOrder(orderDto, personId);
     }
 
     @GetMapping("{id}")
@@ -37,15 +35,15 @@ public class OrderController {
         return orderService.getOrders();
     }
 
-    @PutMapping ("{orderId}/person/{personId}")
-    public void takeOrder(@PathVariable String orderId, @PathVariable long personId) {
-        orderService.takeOrder(orderId, personId);
+    @PutMapping ("{orderId}")
+    public void changeOrderStatus(@PathVariable String orderId, @RequestParam long personId, @RequestParam OrderStatus status) {
+        orderService.changeOrderStatus(orderId, personId, status);
     }
 
-    @PostMapping ("{orderId}/person/{personId}")
-    public void rejectOrder(@PathVariable String orderId, @PathVariable long personId) {
-        orderService.rejectOrder(orderId, personId);
-    }
+//    @PostMapping ("{orderId}/person/{personId}")
+//    public void rejectOrder(@PathVariable String orderId, @PathVariable long personId) {
+//        orderService.rejectOrder(orderId, personId);
+//    }
     @GetMapping("/location")
     public Iterable<OrderDTO> getOrdersByLocation(@RequestParam String location, double distance) {
         String[] coords = location.split(",");

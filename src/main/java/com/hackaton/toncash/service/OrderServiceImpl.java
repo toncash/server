@@ -5,28 +5,18 @@ import com.hackaton.toncash.exception.OrderNotFoundException;
 import com.hackaton.toncash.model.Order;
 import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.model.OrderType;
-import com.hackaton.toncash.model.Person;
 import com.hackaton.toncash.repo.OrderRepo;
-import com.hackaton.toncash.repo.PersonRepo;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
-import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
-import java.beans.PropertyDescriptor;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -36,24 +26,25 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepo orderRepository;
     private final PersonService personService;
 
-//        private final PersonRepo personRepository;
+    //        private final PersonRepo personRepository;
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public OrderDTO createOrder(OrderDTO orderDto) {
+    public OrderDTO createOrder(OrderDTO orderDto, long personId) {
 
         Order order = modelMapper.map(orderDto, Order.class);
         order.setLocalDateTime(LocalDateTime.now());
         orderRepository.save(order);
         System.out.println("order " + order.getId());
         if (orderDto.getOrderType().equals(OrderType.BUY)) {
-            personService.addOrderToPerson(orderDto.getBuyerId(), order.getId());
+            orderDto.setBuyerId(personId);
         } else {
-            personService.addOrderToPerson(orderDto.getSellerId(), order.getId());
+            orderDto.setSellerId(personId);
         }
+        personService.addOrderToPerson(personId, order.getId());
 
-        return modelMapper.map(order, OrderDTO.class);
+        return modelMapper.map(orderRepository.save(order), OrderDTO.class);
     }
 
     @Override
@@ -105,10 +96,24 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void takeOrder(String orderId, long personId) {
+    public void changeOrderStatus(String orderId, long personId, OrderStatus status) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
-        order.setOrderStatus(OrderStatus.PENDING);
+        order.setOrderStatus(status);
+        if (status.equals(OrderStatus.PENDING)) {
+            takeOrder(personId, order);
+        }
+        if (status.equals(OrderStatus.BAD)){
+            rejectOrder(orderId, personId);
+        }
         orderRepository.save(order);
+    }
+
+    private void takeOrder(long personId, Order order) {
+        if (order.getOrderType().equals(OrderType.BUY)) {
+            order.setSellerId(personId);
+        } else {
+            order.setBuyerId(personId);
+        }
     }
 
     @Override
