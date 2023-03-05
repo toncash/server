@@ -40,10 +40,10 @@ public class OrderController {
         orderService.changeOrderStatus(orderId, personId, status);
     }
 
-//    @PostMapping ("{orderId}/person/{personId}")
-//    public void rejectOrder(@PathVariable String orderId, @PathVariable long personId) {
-//        orderService.rejectOrder(orderId, personId);
-//    }
+    @PostMapping ("{orderId}/person/{personId}")
+    public void rejectOrder(@PathVariable String orderId, @PathVariable long personId) {
+        orderService.rejectOrder(orderId, personId);
+    }
     @GetMapping("/location")
     public Iterable<OrderDTO> getOrdersByLocation(@RequestParam String location, double distance) {
         String[] coords = location.split(",");
