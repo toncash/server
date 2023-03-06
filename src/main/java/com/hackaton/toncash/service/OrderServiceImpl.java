@@ -36,7 +36,6 @@ public class OrderServiceImpl implements OrderService {
         Order order = modelMapper.map(orderDto, Order.class);
         order.setLocalDateTime(LocalDateTime.now());
         orderRepository.save(order);
-        System.out.println("order " + order.getId());
         if (orderDto.getOrderType().equals(OrderType.BUY)) {
             orderDto.setBuyerId(personId);
         } else {

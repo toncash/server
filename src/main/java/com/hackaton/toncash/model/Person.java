@@ -24,6 +24,8 @@ public class Person {
     private Set<String> badOrders;
 
     private Set<String> community;
+
+    private PersonLevel level;
     private float rank;
 
     public Person() {
@@ -31,5 +33,6 @@ public class Person {
         this.finishedOrders = new HashSet<>();
         this.badOrders = new HashSet<>();
         this.community = new HashSet<>();
+        this.level = PersonLevel.BASIC;
     }
 }
