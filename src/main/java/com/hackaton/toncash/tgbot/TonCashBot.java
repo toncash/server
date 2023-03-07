@@ -29,7 +29,7 @@ public class TonCashBot extends TelegramLongPollingBot {
             SendMessage message = new SendMessage();
                     message.setChatId(update.getMessage().getChatId());
                     String name = update.getMessage().getFrom().getUserName();
-                    message.setText("Hi "+ name +", my master! " + update.getMessage().getChatId());
+                    message.setText("Hi "+ name +", my master! " + update.getMessage().getChatId()+ " " + update.getMessage().getFrom().getId());
                     message.setReplyMarkup(createButton());
             try {
                 execute(message);

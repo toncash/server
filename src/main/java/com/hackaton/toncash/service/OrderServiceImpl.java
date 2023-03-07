@@ -6,6 +6,7 @@ import com.hackaton.toncash.model.Order;
 import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.model.OrderType;
 import com.hackaton.toncash.repo.OrderRepo;
+import com.hackaton.toncash.tgbot.TonCashBot;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
@@ -14,9 +15,12 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -29,6 +33,8 @@ public class OrderServiceImpl implements OrderService {
     //        private final PersonRepo personRepository;
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
+
+    private final TonCashBot bot;
 
     @Override
     public OrderDTO createOrder(OrderDTO orderDto, long personId) {
@@ -43,6 +49,12 @@ public class OrderServiceImpl implements OrderService {
         }
         personService.addOrderToPerson(personId, order.getId());
 
+        SendMessage message = new SendMessage(Long.toString(personId), "You created order for " + order.getOrderType() + " with " + order.getAmount() + "TON");
+        try {
+            bot.execute(message);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
         return modelMapper.map(orderRepository.save(order), OrderDTO.class);
     }
 
@@ -55,6 +67,13 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Iterable<OrderDTO> getOrders() {
         return StreamSupport.stream(orderRepository.findAll().spliterator(), false)
+                .map(o -> modelMapper.map(o, OrderDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    public Iterable<OrderDTO> getOrdersByPersonId(long personId) {
+        Set<String> currentOrders = personService.getPerson(personId).getCurrentOrders();
+        return StreamSupport.stream(orderRepository.findAllById(currentOrders).spliterator(), false)
                 .map(o -> modelMapper.map(o, OrderDTO.class))
                 .collect(Collectors.toList());
     }

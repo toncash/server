@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/v1/orders")
-@CrossOrigin
+@CrossOrigin(origins = "*")
 @AllArgsConstructor
 public class OrderController {
     private final OrderService orderService;
@@ -31,9 +31,15 @@ public class OrderController {
     }
 
     @GetMapping
-    public Iterable<OrderDTO> getOrders() {
-        return orderService.getOrders();
+    public Iterable<OrderDTO> getOrders(@RequestParam(defaultValue = "") Long personId) {
+        if (!personId.toString().isEmpty()) {
+            System.out.println(personId);
+            return orderService.getOrdersByPersonId(personId);
+        } else {
+            return orderService.getOrders();
+        }
     }
+
 
     @PutMapping ("{orderId}")
     public void changeOrderStatus(@PathVariable String orderId, @RequestParam long personId, @RequestParam OrderStatus status) {

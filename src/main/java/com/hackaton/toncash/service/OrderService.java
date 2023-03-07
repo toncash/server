@@ -10,6 +10,7 @@ public interface OrderService {
     OrderDTO getOrder(String id);
 
     Iterable<OrderDTO> getOrders();
+    Iterable<OrderDTO> getOrdersByPersonId(long personId);
 
     Iterable<OrderDTO> getOrdersByLocation(Point point, double distance);
 
