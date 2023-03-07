@@ -34,7 +34,7 @@ public class OrderServiceImpl implements OrderService {
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
 
-    private final TonCashBot bot;
+//    private final TonCashBot bot;
 
     @Override
     public OrderDTO createOrder(OrderDTO orderDto, long personId) {
@@ -50,11 +50,11 @@ public class OrderServiceImpl implements OrderService {
         personService.addOrderToPerson(personId, order.getId());
 
         SendMessage message = new SendMessage(Long.toString(personId), "You created order for " + order.getOrderType() + " with " + order.getAmount() + "TON");
-        try {
-            bot.execute(message);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+//            bot.execute(message);
+//        } catch (TelegramApiException e) {
+//            throw new RuntimeException(e);
+//        }
         return modelMapper.map(orderRepository.save(order), OrderDTO.class);
     }
 
