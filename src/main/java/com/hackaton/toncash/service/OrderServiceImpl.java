@@ -34,7 +34,7 @@ public class OrderServiceImpl implements OrderService {
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
 
-//    private final TonCashBot bot;
+    private final TonCashBot bot;
 
     @Override
     public OrderDTO createOrder(OrderDTO orderDto, long personId) {
@@ -43,18 +43,18 @@ public class OrderServiceImpl implements OrderService {
         order.setLocalDateTime(LocalDateTime.now());
         orderRepository.save(order);
         if (orderDto.getOrderType().equals(OrderType.BUY)) {
-            orderDto.setBuyerId(personId);
+            order.setBuyerId(personId);
         } else {
-            orderDto.setSellerId(personId);
+            order.setSellerId(personId);
         }
         personService.addOrderToPerson(personId, order.getId());
 
         SendMessage message = new SendMessage(Long.toString(personId), "You created order for " + order.getOrderType() + " with " + order.getAmount() + "TON");
-//        try {
-//            bot.execute(message);
-//        } catch (TelegramApiException e) {
-//            throw new RuntimeException(e);
-//        }
+        try {
+            bot.execute(message);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
         return modelMapper.map(orderRepository.save(order), OrderDTO.class);
     }
 
@@ -127,10 +127,20 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void takeOrder(long personId, Order order) {
+        long ownerId;
         if (order.getOrderType().equals(OrderType.BUY)) {
+            ownerId = order.getBuyerId();
             order.setSellerId(personId);
         } else {
+            ownerId = order.getSellerId();
             order.setBuyerId(personId);
+        }
+        String clientUsername = personService.getPerson(personId).getUsername();
+        SendMessage message = new SendMessage(Long.toString(ownerId), "You have client " + clientUsername+ " for order " + order.getOrderType() + " with " + order.getAmount() + "TON");
+        try {
+            bot.execute(message);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
         }
     }
 
