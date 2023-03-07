@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/v1/persons")
-@CrossOrigin(origins = "/**", allowedHeaders = "/**")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @AllArgsConstructor
 public class PersonController {
     private final PersonService personService;
