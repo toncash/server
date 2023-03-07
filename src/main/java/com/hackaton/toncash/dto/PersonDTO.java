@@ -9,8 +9,10 @@ import java.util.Set;
 @Getter
 @Setter
 @Builder
+@NonNull
 public class PersonDTO {
     private long id;
+    private long chatId;
     private String username;
     private Set<String> currentOrders;
     private int finishedOrders;

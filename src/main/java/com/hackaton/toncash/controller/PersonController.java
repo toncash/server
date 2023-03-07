@@ -12,15 +12,16 @@ import org.springframework.web.bind.annotation.*;
 public class PersonController {
     private final PersonService personService;
 
+    @PostMapping("{id}")
+    public PersonDTO firstInPerson(@PathVariable long id, @RequestBody PersonDTO personDTO) {
+        System.out.println(personDTO.getChatId());
+        System.out.println(personDTO.getUsername());
+        return personService.firstInPerson(id, personDTO);
+    }
+
     @GetMapping("{id}")
-    public PersonDTO getPerson(@PathVariable long id, @RequestParam(defaultValue = "") String username) {
-        if (!username.isEmpty()) {
-            System.out.println(id + username);
-            return personService.getPerson(id, username);
-        } else {
-            System.out.println(id);
-            return personService.getPerson(id);
-        }
+    public PersonDTO getPerson(@PathVariable long id) {
+        return personService.getPerson(id);
     }
 }
 

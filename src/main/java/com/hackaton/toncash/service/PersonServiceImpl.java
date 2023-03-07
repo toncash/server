@@ -1,11 +1,8 @@
 package com.hackaton.toncash.service;
 
-import com.hackaton.toncash.dto.OrderDTO;
 import com.hackaton.toncash.dto.PersonDTO;
-import com.hackaton.toncash.exception.OrderNotFoundException;
 import com.hackaton.toncash.exception.UserExistException;
 import com.hackaton.toncash.exception.UserNotFoundException;
-import com.hackaton.toncash.model.Order;
 import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.model.Person;
 import com.hackaton.toncash.repo.PersonRepo;
@@ -14,8 +11,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -35,14 +30,23 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public PersonDTO getPerson(long id, String username) {
+    public PersonDTO firstInPerson(long id, PersonDTO personDTO) {
         Person person = personRepository.findById(id).orElse(null);
         if (person == null) {
             person = new Person();
             person.setId(id);
-            person.setUsername(username);
-        } else if (!person.getUsername().equals(username)) {
-            person.setUsername(username);
+            person.setUsername(personDTO.getUsername());
+            person.setChatId(personDTO.getChatId());
+        } else {
+            if (!person.getUsername().equals(personDTO.getUsername())) {
+                person.setUsername(personDTO.getUsername());
+            }
+            System.out.println(person.getChatId());
+            System.out.println(personDTO.getChatId());
+            System.out.println(person.getChatId() != personDTO.getChatId());
+            if (person.getChatId() != personDTO.getChatId()) {
+                person.setChatId(personDTO.getChatId());
+            }
         }
         return mapToPersonDTO(personRepository.save(person));
     }
@@ -117,6 +121,7 @@ public class PersonServiceImpl implements PersonService {
         return PersonDTO.builder()
                 .id(person.getId())
                 .username(person.getUsername())
+                .chatId(person.getChatId())
                 .currentOrders(person.getCurrentOrders())
                 .finishedOrders(person.getFinishedOrders().size())
                 .badOrders(person.getBadOrders().size())

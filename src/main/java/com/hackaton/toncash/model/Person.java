@@ -17,6 +17,8 @@ public class Person {
     @Id
     private long id;
 
+    private long chatId;
+
     private String username;
 
     private Set<String> currentOrders;

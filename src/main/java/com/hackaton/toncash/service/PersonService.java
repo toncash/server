@@ -6,7 +6,7 @@ import com.hackaton.toncash.model.OrderStatus;
 public interface PersonService {
     void addPerson(PersonDTO personDto);
 
-    PersonDTO getPerson(long id, String username);
+    PersonDTO firstInPerson(long id, PersonDTO personDTO);
     PersonDTO getPerson(long id);
 
     Iterable<PersonDTO> getPersons();
