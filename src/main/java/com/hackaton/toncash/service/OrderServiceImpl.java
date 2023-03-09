@@ -6,17 +6,16 @@ import com.hackaton.toncash.model.Order;
 import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.model.OrderType;
 import com.hackaton.toncash.repo.OrderRepo;
-import com.hackaton.toncash.tgbot.TonCashBot;
-import lombok.AllArgsConstructor;
+import com.hackaton.toncash.tgbot.TonBotService;
+import lombok.Setter;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,7 +24,8 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
-@AllArgsConstructor
+@Setter
+//@AllArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final OrderRepo orderRepository;
     private final PersonService personService;
@@ -33,8 +33,17 @@ public class OrderServiceImpl implements OrderService {
     //        private final PersonRepo personRepository;
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
+    //    @Autowired
+    private TonBotService botService;
 
-    private final TonCashBot bot;
+    @Autowired
+    public OrderServiceImpl(OrderRepo orderRepository, PersonService personService, ModelMapper modelMapper, MongoTemplate mongoTemplate, TonBotService botService) {
+        this.orderRepository = orderRepository;
+        this.personService = personService;
+        this.modelMapper = modelMapper;
+        this.mongoTemplate = mongoTemplate;
+        this.botService = botService;
+    }
 
     @Override
     public OrderDTO createOrder(OrderDTO orderDto, long personId) {
@@ -49,12 +58,9 @@ public class OrderServiceImpl implements OrderService {
         }
         personService.addOrderToPerson(personId, order.getId());
 
-        SendMessage message = new SendMessage(Long.toString(personId), "You created order for " + order.getOrderType() + " with " + order.getAmount() + "TON");
-        try {
-            bot.execute(message);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
+        String message = "You created order for " + order.getOrderType() + " with " + order.getAmount() + "TON";
+        botService.sendNotification(Long.toString(personId), message);
+
         return modelMapper.map(orderRepository.save(order), OrderDTO.class);
     }
 
@@ -114,19 +120,32 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void changeOrderStatus(String orderId, long personId, OrderStatus status) {
+    public OrderDTO orderRequest(String orderId, long personId, OrderStatus status) {
+        System.out.println("order id - " + orderId);
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+        if (status.equals(OrderStatus.PENDING)) {
+            takeOrder(personId, order, false);
+        }
+        return modelMapper.map(order, OrderDTO.class);
+    }
+
+    @Override
+    public void changeOrderStatus(String orderId, long personId, OrderStatus status) {
+        System.out.println("order id - " + orderId);
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+        System.out.println(orderId);
         order.setOrderStatus(status);
         if (status.equals(OrderStatus.PENDING)) {
-            takeOrder(personId, order);
+            takeOrder(personId, order, true);
         }
-        if (status.equals(OrderStatus.BAD)){
+        if (status.equals(OrderStatus.BAD)) {
             rejectOrder(orderId, personId);
         }
+
         orderRepository.save(order);
     }
 
-    private void takeOrder(long personId, Order order) {
+    private void takeOrder(long personId, Order order, boolean flag) {
         long ownerId;
         if (order.getOrderType().equals(OrderType.BUY)) {
             ownerId = order.getBuyerId();
@@ -136,12 +155,31 @@ public class OrderServiceImpl implements OrderService {
             order.setBuyerId(personId);
         }
         String clientUsername = personService.getPerson(personId).getUsername();
-        SendMessage message = new SendMessage(Long.toString(ownerId), "You have client " + clientUsername+ " for order " + order.getOrderType() + " with " + order.getAmount() + "TON");
-        try {
-            bot.execute(message);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
+        if (!flag) {
+            String message = "You have a client @" + clientUsername + " for the order " + order.getOrderType() + " with " + order.getAmount() + "TON";
+            botService.sendNotificationWithApplyButton(Long.toString(ownerId), message, order.getId(), personId);
+        } else {
+            String message = "You confirm the client @" + clientUsername + " for the order " + order.getOrderType() + " with " + order.getAmount() + "TON";
+            botService.sendNotification(Long.toString(ownerId), message);
         }
+
+    }
+
+    public void denyOrder(long personId, String orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+        long ownerId;
+        if (order.getOrderType().equals(OrderType.BUY)) {
+            ownerId = order.getBuyerId();
+            order.setSellerId(personId);
+        } else {
+            ownerId = order.getSellerId();
+            order.setBuyerId(personId);
+        }
+        String clientUsername = personService.getPerson(personId).getUsername();
+        String ownerMessage = "You denied the offer from the client @" + clientUsername + " for order " + order.getOrderType() + " with " + order.getAmount() + "TON";
+        String clientMessage = "The owner of the order denied your offer";
+        botService.sendNotification(Long.toString(ownerId), ownerMessage);
+        botService.sendNotification(Long.toString(personId), clientMessage);
     }
 
     @Override

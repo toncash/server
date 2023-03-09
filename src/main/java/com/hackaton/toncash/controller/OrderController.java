@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/v1/orders")
-@CrossOrigin(origins = "/**", allowedHeaders = "/**")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @AllArgsConstructor
 public class OrderController {
     private final OrderService orderService;
@@ -21,10 +21,19 @@ public class OrderController {
     }
 
     @GetMapping("{id}")
-    public OrderDTO getOrder(@PathVariable String id) {
-        return orderService.getOrder(id);
+    public OrderDTO getOrder(@PathVariable String id, @RequestParam(defaultValue = "") Long personId, @RequestParam(defaultValue = "") OrderStatus status) {
+        if (personId.toString().isEmpty() && status.toString().isEmpty()) {
+            return orderService.getOrder(id);
+        } else {
+            System.out.println("else");
+            return orderService.orderRequest(id, personId, status);
+        }
     }
 
+    //    @GetMapping ("{orderId}")
+//    public void orderRequest(@PathVariable String orderId) {
+//
+//    }
     @DeleteMapping("{id}")
     public void deleteOrder(@PathVariable String id) {
         orderService.deleteOrder(id);
@@ -40,16 +49,17 @@ public class OrderController {
         }
     }
 
-
-    @PutMapping ("{orderId}")
+    @PutMapping("{orderId}")
     public void changeOrderStatus(@PathVariable String orderId, @RequestParam long personId, @RequestParam OrderStatus status) {
         orderService.changeOrderStatus(orderId, personId, status);
     }
 
-    @PostMapping ("{orderId}/person/{personId}")
+
+    @PostMapping("{orderId}/person/{personId}")
     public void rejectOrder(@PathVariable String orderId, @PathVariable long personId) {
         orderService.rejectOrder(orderId, personId);
     }
+
     @GetMapping("/location")
     public Iterable<OrderDTO> getOrdersByLocation(@RequestParam String location, double distance) {
         String[] coords = location.split(",");

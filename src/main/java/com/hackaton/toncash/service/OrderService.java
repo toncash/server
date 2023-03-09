@@ -20,5 +20,7 @@ public interface OrderService {
 
     void changeOrderStatus(String orderId, long personId, OrderStatus status);
 
+    OrderDTO orderRequest(String orderId, long personId, OrderStatus status);
+
     void rejectOrder(String orderId, long personId);
 }
