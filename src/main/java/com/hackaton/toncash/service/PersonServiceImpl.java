@@ -31,14 +31,16 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public PersonDTO firstInPerson(long id, PersonDTO personDTO) {
+        System.out.println(personDTO.getAvatarURL());
         Person person = personRepository.findById(id).orElse(null);
         if (person == null) {
             person = new Person();
             person.setId(id);
             person.setUsername(personDTO.getUsername());
             person.setChatId(personDTO.getChatId());
+            person.setAvatarURL(personDTO.getAvatarURL());
         } else {
-            if (!person.getUsername().equals(personDTO.getUsername())) {
+            if (person.getUsername() == null || !person.getUsername().equals(personDTO.getUsername())) {
                 person.setUsername(personDTO.getUsername());
             }
             System.out.println(person.getChatId());
@@ -47,7 +49,7 @@ public class PersonServiceImpl implements PersonService {
             if (person.getChatId() != personDTO.getChatId()) {
                 person.setChatId(personDTO.getChatId());
             }
-            if (!person.getAvatarURL().equals(personDTO.getAvatarURL())) {
+            if (person.getAvatarURL() == null || !person.getAvatarURL().equals(personDTO.getAvatarURL())) {
                 person.setAvatarURL(personDTO.getAvatarURL());
             }
         }
@@ -124,6 +126,7 @@ public class PersonServiceImpl implements PersonService {
         return PersonDTO.builder()
                 .id(person.getId())
                 .username(person.getUsername())
+                .avatarURL(person.getAvatarURL())
                 .chatId(person.getChatId())
                 .currentOrders(person.getCurrentOrders())
                 .finishedOrders(person.getFinishedOrders().size())
