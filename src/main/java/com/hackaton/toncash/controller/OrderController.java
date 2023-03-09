@@ -33,11 +33,11 @@ public class OrderController {
 
     @GetMapping
     public Iterable<PersonOrderDTO> getOrders(@RequestParam(defaultValue = "") Long personId) {
-        if (!personId.toString().isEmpty()) {
+        if (personId == null) {
             System.out.println(personId);
-            return orderService.getOrdersByPersonId(personId);
-        } else {
             return orderService.getOrders();
+        } else {
+            return orderService.getOrdersByPersonId(personId);
         }
     }
 

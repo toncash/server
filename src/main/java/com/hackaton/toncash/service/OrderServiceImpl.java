@@ -11,6 +11,9 @@ import com.hackaton.toncash.repo.OrderRepo;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -44,9 +48,9 @@ public class OrderServiceImpl implements OrderService {
         long personId = orderDto.getOwnerId();
         orderRepository.save(order);
         if (orderDto.getOrderType().equals(OrderType.BUY)) {
-            orderDto.setBuyerId(personId);
+            order.setBuyerId(personId);
         } else {
-            orderDto.setSellerId(personId);
+            order.setSellerId(personId);
         }
         personService.addOrderToPerson(personId, order.getId());
 
@@ -56,7 +60,6 @@ public class OrderServiceImpl implements OrderService {
 //        } catch (TelegramApiException e) {
 //            throw new RuntimeException(e);
 //        }
-
         return mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class));
     }
 
@@ -82,15 +85,20 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Iterable<PersonOrderDTO> getOrdersByLocation(Point point, double distance) {
+    public Iterable<PersonOrderDTO> getOrdersByLocation(Point point, double requestDistance) {
 //        mongoTemplate.indexOps(Order.class)
 //                .ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2DSPHERE));
         Query query = new Query();
 
-        query.addCriteria(new Criteria().andOperator(
-                Criteria.where("orderStatus").is(OrderStatus.CURRENT),
-                Criteria.where("location").nearSphere(point).maxDistance(distance)));
+        Distance distance = new Distance(requestDistance, Metrics.KILOMETERS);
+        Circle circle = new Circle(point, distance);
+
+        query.addCriteria(Criteria.where("location").withinSphere(circle));
+        query.addCriteria(Criteria.where("orderStatus").is(OrderStatus.CURRENT));
         List<Order> orders = mongoTemplate.find(query, Order.class);
+
+
+//
 
         return orders.stream()
                 .map(order -> mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class)))
