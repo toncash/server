@@ -47,6 +47,9 @@ public class PersonServiceImpl implements PersonService {
             if (person.getChatId() != personDTO.getChatId()) {
                 person.setChatId(personDTO.getChatId());
             }
+            if (!person.getAvatarURL().equals(personDTO.getAvatarURL())) {
+                person.setAvatarURL(personDTO.getAvatarURL());
+            }
         }
         return mapToPersonDTO(personRepository.save(person));
     }
