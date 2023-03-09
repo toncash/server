@@ -21,6 +21,7 @@ public class Person {
 
     private String username;
 
+    private String avatarURL;
     private Set<String> currentOrders;
     private Set<String> finishedOrders;
     private Set<String> badOrders;

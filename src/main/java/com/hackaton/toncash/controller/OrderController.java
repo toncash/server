@@ -1,6 +1,7 @@
 package com.hackaton.toncash.controller;
 
 import com.hackaton.toncash.dto.OrderDTO;
+import com.hackaton.toncash.dto.PersonOrderDTO;
 import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.service.OrderService;
 import lombok.AllArgsConstructor;
@@ -16,12 +17,12 @@ public class OrderController {
 
 
     @PostMapping
-    public OrderDTO createOrder(@RequestBody OrderDTO orderDto, @RequestParam long personId) {
-        return orderService.createOrder(orderDto, personId);
+    public PersonOrderDTO createOrder(@RequestBody OrderDTO orderDto) {
+        return orderService.createOrder(orderDto);
     }
 
     @GetMapping("{id}")
-    public OrderDTO getOrder(@PathVariable String id) {
+    public PersonOrderDTO getOrder(@PathVariable String id) {
         return orderService.getOrder(id);
     }
 
@@ -31,7 +32,7 @@ public class OrderController {
     }
 
     @GetMapping
-    public Iterable<OrderDTO> getOrders(@RequestParam(defaultValue = "") Long personId) {
+    public Iterable<PersonOrderDTO> getOrders(@RequestParam(defaultValue = "") Long personId) {
         if (!personId.toString().isEmpty()) {
             System.out.println(personId);
             return orderService.getOrdersByPersonId(personId);
@@ -51,7 +52,7 @@ public class OrderController {
         orderService.rejectOrder(orderId, personId);
     }
     @GetMapping("/location")
-    public Iterable<OrderDTO> getOrdersByLocation(@RequestParam String location, double distance) {
+    public Iterable<PersonOrderDTO> getOrdersByLocation(@RequestParam String location, double distance) {
         String[] coords = location.split(",");
         double latitude = Double.parseDouble(coords[0]);
         double longitude = Double.parseDouble(coords[1]);

@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @NonNull
 public class OrderDTO {
     private String id;
+    private Long ownerId;
     private Long buyerId;
     private Long sellerId;
     private LocalDateTime localDateTime;

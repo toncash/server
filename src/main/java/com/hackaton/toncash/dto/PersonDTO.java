@@ -14,6 +14,7 @@ public class PersonDTO {
     private long id;
     private long chatId;
     private String username;
+    private String avatarURL;
     private Set<String> currentOrders;
     private int finishedOrders;
     private int badOrders;

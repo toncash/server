@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 public class Order {
     @Id
     private String id;
+    private Long ownerId;
     private Long buyerId;
     private Long sellerId;
     private float amount;

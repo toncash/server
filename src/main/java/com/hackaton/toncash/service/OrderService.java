@@ -1,22 +1,23 @@
 package com.hackaton.toncash.service;
 
 import com.hackaton.toncash.dto.OrderDTO;
+import com.hackaton.toncash.dto.PersonOrderDTO;
 import com.hackaton.toncash.model.OrderStatus;
 import org.springframework.data.geo.Point;
 
 public interface OrderService {
-    OrderDTO createOrder(OrderDTO orderDto, long personId);
+    PersonOrderDTO createOrder(OrderDTO orderDto);
 
-    OrderDTO getOrder(String id);
+    PersonOrderDTO getOrder(String id);
 
-    Iterable<OrderDTO> getOrders();
-    Iterable<OrderDTO> getOrdersByPersonId(long personId);
+    Iterable<PersonOrderDTO> getOrders();
+    Iterable<PersonOrderDTO> getOrdersByPersonId(long personId);
 
-    Iterable<OrderDTO> getOrdersByLocation(Point point, double distance);
+    Iterable<PersonOrderDTO> getOrdersByLocation(Point point, double distance);
 
     void deleteOrder(String id);
 
-    OrderDTO changeOrder(String id, OrderDTO orderDTO);
+    PersonOrderDTO changeOrder(String id, OrderDTO orderDTO);
 
     void changeOrderStatus(String orderId, long personId, OrderStatus status);
 
