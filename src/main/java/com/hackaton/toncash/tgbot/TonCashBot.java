@@ -12,8 +12,12 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.Collections;
 import java.util.List;
 
 
@@ -96,6 +100,12 @@ public class TonCashBot extends TelegramLongPollingBot {
                     throw new RuntimeException(e);
                 }
 
+                sendInlineButton(
+                        update.getMessage().getChatId(),
+                        "View profile",
+                        createInlineButton("To user profile", "https://toncash.github.io/ui/")
+                );
+
             } else if ("view_order_".equals(callbackData)) {
                 System.out.println("view_order_button");
                 SendMessage message = new SendMessage(update.getMessage().getChatId().toString(), "view_order_button");
@@ -104,11 +114,37 @@ public class TonCashBot extends TelegramLongPollingBot {
                 } catch (TelegramApiException e) {
                     throw new RuntimeException(e);
                 }
+
+                sendInlineButton(
+                        update.getMessage().getChatId(),
+                        "Order update!",
+                        createInlineButton("To order details", "https://toncash.github.io/ui/")
+                );
             }
 
 
         }
 
+    }
+
+    public InlineKeyboardMarkup createInlineButton(String text, String url) {
+        InlineKeyboardButton btn = InlineKeyboardButton.builder()
+                .text(text)
+                .webApp(new WebAppInfo(url))
+                .build();
+        return InlineKeyboardMarkup.builder().keyboardRow(Collections.singletonList(btn)).build();
+    }
+
+    public void sendInlineButton(Long who, String txt, InlineKeyboardMarkup kb) {
+        SendMessage sm = SendMessage.builder().chatId(who.toString())
+                .parseMode("HTML").text(txt)
+                .replyMarkup(kb).build();
+
+        try {
+            execute(sm);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
