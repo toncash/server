@@ -7,6 +7,7 @@ import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.model.OrderType;
 import com.hackaton.toncash.repo.OrderRepo;
 import com.hackaton.toncash.tgbot.TonBotService;
+import com.hackaton.toncash.tgbot.TonCashBot;
 import lombok.Setter;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
@@ -34,15 +35,15 @@ public class OrderServiceImpl implements OrderService {
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
     //    @Autowired
-    private TonBotService botService;
+    private TonCashBot bot;
 
     @Autowired
-    public OrderServiceImpl(OrderRepo orderRepository, PersonService personService, ModelMapper modelMapper, MongoTemplate mongoTemplate, TonBotService botService) {
+    public OrderServiceImpl(OrderRepo orderRepository, PersonService personService, ModelMapper modelMapper, MongoTemplate mongoTemplate, TonCashBot bot) {
         this.orderRepository = orderRepository;
         this.personService = personService;
         this.modelMapper = modelMapper;
         this.mongoTemplate = mongoTemplate;
-        this.botService = botService;
+        this.bot = bot;
     }
 
     @Override
@@ -59,7 +60,7 @@ public class OrderServiceImpl implements OrderService {
         personService.addOrderToPerson(personId, order.getId());
 
         String message = "You created order for " + order.getOrderType() + " with " + order.getAmount() + "TON";
-        botService.sendNotification(Long.toString(personId), message);
+        TonBotService.sendNotification(bot,Long.toString(personId), message);
 
         return modelMapper.map(orderRepository.save(order), OrderDTO.class);
     }
@@ -157,10 +158,10 @@ public class OrderServiceImpl implements OrderService {
         String clientUsername = personService.getPerson(personId).getUsername();
         if (!flag) {
             String message = "You have a client @" + clientUsername + " for the order " + order.getOrderType() + " with " + order.getAmount() + "TON";
-            botService.sendNotificationWithApplyButton(Long.toString(ownerId), message, order.getId(), personId);
+            TonBotService.sendNotificationWithApplyButton(bot,Long.toString(ownerId), message, order.getId(), personId);
         } else {
             String message = "You confirm the client @" + clientUsername + " for the order " + order.getOrderType() + " with " + order.getAmount() + "TON";
-            botService.sendNotification(Long.toString(ownerId), message);
+            TonBotService.sendNotification(bot,Long.toString(ownerId), message);
         }
 
     }
@@ -178,8 +179,8 @@ public class OrderServiceImpl implements OrderService {
         String clientUsername = personService.getPerson(personId).getUsername();
         String ownerMessage = "You denied the offer from the client @" + clientUsername + " for order " + order.getOrderType() + " with " + order.getAmount() + "TON";
         String clientMessage = "The owner of the order denied your offer";
-        botService.sendNotification(Long.toString(ownerId), ownerMessage);
-        botService.sendNotification(Long.toString(personId), clientMessage);
+        TonBotService.sendNotification(bot,Long.toString(ownerId), ownerMessage);
+        TonBotService.sendNotification(bot,Long.toString(personId), clientMessage);
     }
 
     @Override
