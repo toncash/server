@@ -22,8 +22,13 @@ public class OrderController {
     }
 
     @GetMapping("{id}")
-    public PersonOrderDTO getOrder(@PathVariable String id) {
-        return orderService.getOrder(id);
+    public PersonOrderDTO getOrder(@PathVariable String id, @RequestParam(defaultValue = "") Long personId, @RequestParam(defaultValue = "") OrderStatus status) {
+        if (personId.toString().isEmpty() && status.toString().isEmpty()) {
+            return orderService.getOrder(id);
+        } else {
+            System.out.println("else");
+            return orderService.orderRequest(id, personId, status);
+        }
     }
 
     @DeleteMapping("{id}")

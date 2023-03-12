@@ -9,6 +9,9 @@ import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.model.OrderType;
 import com.hackaton.toncash.repo.OrderRepo;
 import lombok.AllArgsConstructor;
+import com.hackaton.toncash.tgbot.TonCashBot;
+import com.hackaton.toncash.tgbot.TonBotService;
+import lombok.Setter;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.geo.Circle;
@@ -37,8 +40,9 @@ public class OrderServiceImpl implements OrderService {
     //        private final PersonRepo personRepository;
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
+    //    @Autowired
+    private TonCashBot bot;
 
-//    private final TonCashBot bot;
 
     @Override
     public PersonOrderDTO createOrder(OrderDTO orderDto) {
@@ -54,12 +58,9 @@ public class OrderServiceImpl implements OrderService {
         }
         personService.addOrderToPerson(personId, order.getId());
 
-        SendMessage message = new SendMessage(Long.toString(personId), "You created order for " + order.getOrderType() + " with " + order.getAmount() + "TON");
-//        try {
-//            bot.execute(message);
-//        } catch (TelegramApiException e) {
-//            throw new RuntimeException(e);
-//        }
+        String message = "You created order for " + order.getOrderType() + " with " + order.getAmount() + "TON";
+        TonBotService.sendNotification(bot,Long.toString(personId), message);
+
         return mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class));
     }
 
@@ -97,9 +98,6 @@ public class OrderServiceImpl implements OrderService {
         query.addCriteria(Criteria.where("orderStatus").is(OrderStatus.CURRENT));
         List<Order> orders = mongoTemplate.find(query, Order.class);
 
-
-//
-
         return orders.stream()
                 .map(order -> mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class)))
                 .collect(Collectors.toList());
@@ -126,24 +124,63 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public OrderDTO orderRequest(String orderId, long personId, OrderStatus status) {
+        System.out.println("order id - " + orderId);
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+        if (status.equals(OrderStatus.PENDING)) {
+            takeOrder(personId, order, false);
+        }
+        return modelMapper.map(order, OrderDTO.class);
+    }
+
+    @Override
     public void changeOrderStatus(String orderId, long personId, OrderStatus status) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
         order.setOrderStatus(status);
         if (status.equals(OrderStatus.PENDING)) {
             takeOrder(personId, order);
         }
-        if (status.equals(OrderStatus.BAD)) {
+        if (status.equals(OrderStatus.BAD)){
             rejectOrder(orderId, personId);
         }
         orderRepository.save(order);
     }
 
-    private void takeOrder(long personId, Order order) {
+    private void takeOrder(long personId, Order order, boolean flag) {
+        long ownerId;
         if (order.getOrderType().equals(OrderType.BUY)) {
+            ownerId = order.getBuyerId();
             order.setSellerId(personId);
         } else {
+            ownerId = order.getSellerId();
             order.setBuyerId(personId);
         }
+        String clientUsername = personService.getPerson(personId).getUsername();
+        if (!flag) {
+            String message = "You have a client @" + clientUsername + " for the order " + order.getOrderType() + " with " + order.getAmount() + "TON";
+            TonBotService.sendNotificationWithApplyButton(bot,Long.toString(ownerId), message, order.getId(), personId);
+        } else {
+            String message = "You confirm the client @" + clientUsername + " for the order " + order.getOrderType() + " with " + order.getAmount() + "TON";
+            TonBotService.sendNotification(bot,Long.toString(ownerId), message);
+        }
+
+    }
+
+    public void denyOrder(long personId, String orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+        long ownerId;
+        if (order.getOrderType().equals(OrderType.BUY)) {
+            ownerId = order.getBuyerId();
+            order.setSellerId(personId);
+        } else {
+            ownerId = order.getSellerId();
+            order.setBuyerId(personId);
+        }
+        String clientUsername = personService.getPerson(personId).getUsername();
+        String ownerMessage = "You denied the offer from the client @" + clientUsername + " for order " + order.getOrderType() + " with " + order.getAmount() + "TON";
+        String clientMessage = "The owner of the order denied your offer";
+        TonBotService.sendNotification(bot,Long.toString(ownerId), ownerMessage);
+        TonBotService.sendNotification(bot,Long.toString(personId), clientMessage);
     }
 
     @Override
