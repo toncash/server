@@ -23,7 +23,8 @@ public class OrderController {
 
     @GetMapping("{id}")
     public PersonOrderDTO getOrder(@PathVariable String id, @RequestParam(defaultValue = "") Long personId, @RequestParam(defaultValue = "") OrderStatus status) {
-        if (personId.toString().isEmpty() && status.toString().isEmpty()) {
+        System.out.println("123");
+        if (personId == null && status == null) {
             return orderService.getOrder(id);
         } else {
             System.out.println("else");
@@ -47,15 +48,16 @@ public class OrderController {
     }
 
 
-    @PutMapping ("{orderId}")
+    @PutMapping("{orderId}")
     public void changeOrderStatus(@PathVariable String orderId, @RequestParam long personId, @RequestParam OrderStatus status) {
         orderService.changeOrderStatus(orderId, personId, status);
     }
 
-    @PostMapping ("{orderId}/person/{personId}")
+    @PostMapping("{orderId}/person/{personId}")
     public void rejectOrder(@PathVariable String orderId, @PathVariable long personId) {
         orderService.rejectOrder(orderId, personId);
     }
+
     @GetMapping("/location")
     public Iterable<PersonOrderDTO> getOrdersByLocation(@RequestParam String location, double distance) {
         String[] coords = location.split(",");

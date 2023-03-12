@@ -9,6 +9,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -46,7 +48,7 @@ public class TonBotService {
         InlineKeyboardButton viewOrder = createButton("View order", "", "https://toncash.github.io/ui/");
 
         return InlineKeyboardMarkup.builder()
-                .keyboard(List.of( List.of(viewOrder), List.of(applyButton, denyButton)))
+                .keyboard(Arrays.asList(Collections.singletonList(viewOrder), Arrays.asList(applyButton, denyButton)))
                 .build();
     }
 

@@ -20,8 +20,6 @@ public class Order {
     @Id
     private String id;
     private Long ownerId;
-    private Long buyerId;
-    private Long sellerId;
     private float amount;
     @GeoSpatialIndexed(name = "location", type = GeoSpatialIndexType.GEO_2DSPHERE)
     private Point location;
@@ -29,9 +27,7 @@ public class Order {
     private String currency;
     private OrderType orderType;
     private OrderStatus orderStatus;
-
     private OrderLimit limits;
-
     private LocalDateTime localDateTime;
 
 

@@ -19,11 +19,12 @@ import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 
-@Component
+//@Component
 @Getter
 @Setter
 @AllArgsConstructor
@@ -133,7 +134,7 @@ public class TonCashBot extends TelegramLongPollingBot {
                 .build();
 
         return InlineKeyboardMarkup.builder()
-                .keyboardRow(List.of( viewOrder))
+                .keyboardRow(Collections.singletonList( viewOrder))
                 .build();
     }
 
