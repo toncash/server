@@ -1,7 +1,9 @@
 package com.hackaton.toncash.dto;
 
+import com.hackaton.toncash.model.Deal;
 import lombok.*;
 
+import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor
@@ -16,6 +18,7 @@ public class PersonDTO {
     private String username;
     private String avatarURL;
     private Set<String> currentOrders;
+    private List<Deal> currentDeals;
     private int finishedOrders;
     private int badOrders;
     private Set<String> community;

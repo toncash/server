@@ -1,5 +1,6 @@
 package com.hackaton.toncash.controller;
 
+import com.hackaton.toncash.dto.DealDTO;
 import com.hackaton.toncash.dto.PersonDTO;
 import com.hackaton.toncash.service.PersonService;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,11 @@ public class PersonController {
     @GetMapping("{id}")
     public PersonDTO getPerson(@PathVariable long id) {
         return personService.getPerson(id);
+    }
+
+    @GetMapping("{id}/deals")
+    public Iterable<DealDTO> getDealsByPersonId(@PathVariable Long id) {
+        return personService.getDealsByPersonId(id);
     }
 }
 

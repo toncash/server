@@ -1,5 +1,6 @@
 package com.hackaton.toncash.service;
 
+import com.hackaton.toncash.dto.DealDTO;
 import com.hackaton.toncash.dto.PersonDTO;
 import com.hackaton.toncash.model.OrderStatus;
 
@@ -14,6 +15,7 @@ public interface PersonService {
     void deletePerson(long id);
 
     PersonDTO changePerson(long id, PersonDTO personDto);
+    Iterable<DealDTO> getDealsByPersonId(Long personId);
 
     PersonDTO addOrderToPerson(long userId, String orderId);
     PersonDTO removeOrderFromPerson(long userId, String orderId);

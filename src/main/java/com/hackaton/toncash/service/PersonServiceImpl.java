@@ -1,5 +1,6 @@
 package com.hackaton.toncash.service;
 
+import com.hackaton.toncash.dto.DealDTO;
 import com.hackaton.toncash.dto.PersonDTO;
 import com.hackaton.toncash.exception.UserExistException;
 import com.hackaton.toncash.exception.UserNotFoundException;
@@ -100,8 +101,8 @@ public class PersonServiceImpl implements PersonService {
 
 
     @Override
-    public PersonDTO changeStatusOrderFromPerson(long userId, String orderId, OrderStatus orderStatus) {
-        Person person = personRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+    public PersonDTO changeStatusOrderFromPerson(long personId, String orderId, OrderStatus orderStatus) {
+        Person person = personRepository.findById(personId).orElseThrow(() -> new UserNotFoundException(personId));
         if (orderStatus.equals(OrderStatus.FINISH)) {
             person.getCurrentOrders().remove(orderId);
             person.getFinishedOrders().add(orderId);
@@ -122,6 +123,14 @@ public class PersonServiceImpl implements PersonService {
 
     }
 
+    @Override
+    public Iterable<DealDTO> getDealsByPersonId(Long personId) {
+        Person person = personRepository.findById(personId).orElseThrow(() -> new UserNotFoundException(personId));
+        return person.getCurrentDeals().stream()
+                .map(deal -> modelMapper.map(deal, DealDTO.class))
+                .collect(Collectors.toList());
+    }
+
     private PersonDTO mapToPersonDTO(Person person) {
         return PersonDTO.builder()
                 .id(person.getId())
@@ -131,6 +140,7 @@ public class PersonServiceImpl implements PersonService {
                 .currentOrders(person.getCurrentOrders())
                 .finishedOrders(person.getFinishedOrders().size())
                 .badOrders(person.getBadOrders().size())
+                .currentDeals(person.getCurrentDeals())
                 .community(person.getCommunity())
                 .rank(person.getRank())
                 .build();
