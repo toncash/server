@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 
-//@Component
+@Component
 @Getter
 @Setter
 @AllArgsConstructor
@@ -74,39 +74,30 @@ public class TonCashBot extends TelegramLongPollingBot {
         } else if (update.hasCallbackQuery()) {
             String callbackData = update.getCallbackQuery().getData();
 
-            if (callbackData.startsWith("apply_deal_")) {
+            if (callbackData.startsWith("accept_deal_")) {
                 System.out.println("apply_deal_button");
 
-                int orderIdStartIndex = callbackData.indexOf("orderId:") + "orderId:".length();
-                int orderIdEndIndex = callbackData.indexOf(";", orderIdStartIndex);
-                String orderId = callbackData.substring(orderIdStartIndex, orderIdEndIndex);
+                int dealIdStartIndex = callbackData.indexOf("dealId:") + "dealId:".length();
+                int dealIdEndIndex = callbackData.indexOf(";", dealIdStartIndex);
+                String dealId = callbackData.substring(dealIdStartIndex, dealIdEndIndex);
                 int personIdStartIndex = callbackData.indexOf("personId:") + "personId:".length();
                 String personId = callbackData.substring(personIdStartIndex);
+                Long ownerOrderId = update.getCallbackQuery().getFrom().getId();
 
-//                EditMessageReplyMarkup newMarkup = EditMessageReplyMarkup.builder()
-//                        .chatId(update.getCallbackQuery().getFrom().getId())
-//                        .messageId(update.getCallbackQuery().getMessage().getMessageId())
-//                        .replyMarkup(createInlineKeyboard())
-//                        .build();
-//                orderService.getOrder(orderId).get
-
-                EditMessageText message = chooseAnswer(update, "You accept the offer from ");
-                try {
-                    execute(message);
-                } catch (TelegramApiException e) {
-                    throw new RuntimeException(e);
-                }
-//                orderService.changeOrderStatus(orderId, Long.parseLong(personId), OrderStatus.PENDING);
+                Long chatId = update.getCallbackQuery().getFrom().getId();
+                Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
+                orderService.acceptDeal(Long.parseLong(personId), dealId, ownerOrderId, chatId, messageId);
+//                Long.parseLong(personId), dealId, ownerOrderId, chatId, messageId
             } else if (callbackData.startsWith("deny_deal_")) {
                 System.out.println("diny_deal_");
 
-                int orderIdStartIndex = callbackData.indexOf("orderId:") + "orderId:".length();
-                int orderIdEndIndex = callbackData.indexOf(";", orderIdStartIndex);
-                String orderId = callbackData.substring(orderIdStartIndex, orderIdEndIndex);
+                int dealIdStartIndex = callbackData.indexOf("dealId:") + "dealId:".length();
+                int dealIdEndIndex = callbackData.indexOf(";", dealIdStartIndex);
+                String dealId = callbackData.substring(dealIdStartIndex, dealIdEndIndex);
                 int personIdStartIndex = callbackData.indexOf("personId:") + "personId:".length();
                 String personId = callbackData.substring(personIdStartIndex);
 
-                EditMessageText message = chooseAnswer(update, "Y deny");
+//                EditMessageText message = chooseAnswer(update, "Y deny");
 
 //                orderService.denyOrder(Long.parseLong(personId), orderId);
             }
@@ -116,46 +107,26 @@ public class TonCashBot extends TelegramLongPollingBot {
 
     }
 
-    private EditMessageText chooseAnswer(Update update, String text) {
-        return EditMessageText.builder()
-                .chatId(update.getCallbackQuery().getFrom().getId())
-                .text(text)
-                .messageId(update.getCallbackQuery().getMessage().getMessageId())
-                .replyMarkup(createInlineKeyboard())
-                .parseMode(ParseMode.HTML)
-                .build();
-    }
 
-    private InlineKeyboardMarkup createInlineKeyboard() {
 
-        InlineKeyboardButton viewOrder = InlineKeyboardButton.builder()
-                .text("View order")
-                .webApp(new WebAppInfo("https://toncash.github.io/ui/"))
-                .build();
-
-        return InlineKeyboardMarkup.builder()
-                .keyboardRow(Collections.singletonList( viewOrder))
-                .build();
-    }
-
-    public InlineKeyboardMarkup createInlineButton(String text, String url) {
-        InlineKeyboardButton btn = InlineKeyboardButton.builder()
-                .text(text)
-                .webApp(new WebAppInfo(url))
-                .build();
-        return InlineKeyboardMarkup.builder().keyboardRow(Collections.singletonList(btn)).build();
-    }
-
-    public void sendInlineButton(Long who, String txt, InlineKeyboardMarkup kb) {
-        SendMessage sm = SendMessage.builder().chatId(who.toString())
-                .parseMode("HTML").text(txt)
-                .replyMarkup(kb).build();
-
-        try {
-            execute(sm);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    public InlineKeyboardMarkup createInlineButton(String text, String url) {
+//        InlineKeyboardButton btn = InlineKeyboardButton.builder()
+//                .text(text)
+//                .webApp(new WebAppInfo(url))
+//                .build();
+//        return InlineKeyboardMarkup.builder().keyboardRow(Collections.singletonList(btn)).build();
+//    }
+//
+//    public void sendInlineButton(Long who, String txt, InlineKeyboardMarkup kb) {
+//        SendMessage sm = SendMessage.builder().chatId(who.toString())
+//                .parseMode("HTML").text(txt)
+//                .replyMarkup(kb).build();
+//
+//        try {
+//            execute(sm);
+//        } catch (TelegramApiException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
 }

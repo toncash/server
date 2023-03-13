@@ -1,5 +1,6 @@
 package com.hackaton.toncash.dto;
 
+import com.hackaton.toncash.model.Deal;
 import com.hackaton.toncash.model.OrderLimit;
 import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.model.OrderType;
@@ -7,6 +8,7 @@ import lombok.*;
 import org.springframework.data.geo.Point;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,9 +25,9 @@ public class OrderDTO {
     private Point location;
     private float price;
     private String currency;
-
     private OrderLimit limits;
     private OrderType orderType;
     private OrderStatus orderStatus;
+    List<Deal> deals;
 
 }

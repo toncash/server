@@ -1,7 +1,10 @@
 package com.hackaton.toncash.service;
 
+import com.hackaton.toncash.dto.DealDTO;
 import com.hackaton.toncash.dto.OrderDTO;
 import com.hackaton.toncash.dto.PersonOrderDTO;
+import com.hackaton.toncash.model.DealStatus;
+import com.hackaton.toncash.model.Order;
 import com.hackaton.toncash.model.OrderStatus;
 import org.springframework.data.geo.Point;
 
@@ -21,7 +24,13 @@ public interface OrderService {
 
     void changeOrderStatus(String orderId, long personId, OrderStatus status);
 
-    PersonOrderDTO orderRequest(String orderId, long personId, OrderStatus status);
-
     void rejectOrder(String orderId, long personId);
+
+    DealDTO createDeal(DealDTO dealDTO, Long clientId);
+
+    DealDTO getDeal(String orderId, String dealId);
+
+    Iterable<DealDTO> getDeals(String orderId);
+
+    Iterable<DealDTO> getDealsByPersonId(Long personId);
 }

@@ -1,5 +1,6 @@
 package com.hackaton.toncash.controller;
 
+import com.hackaton.toncash.dto.DealDTO;
 import com.hackaton.toncash.dto.OrderDTO;
 import com.hackaton.toncash.dto.PersonOrderDTO;
 import com.hackaton.toncash.model.OrderStatus;
@@ -22,14 +23,9 @@ public class OrderController {
     }
 
     @GetMapping("{id}")
-    public PersonOrderDTO getOrder(@PathVariable String id, @RequestParam(defaultValue = "") Long personId, @RequestParam(defaultValue = "") OrderStatus status) {
-        System.out.println("123");
-        if (personId == null && status == null) {
-            return orderService.getOrder(id);
-        } else {
-            System.out.println("else");
-            return orderService.orderRequest(id, personId, status);
-        }
+    public PersonOrderDTO getOrder(@PathVariable String id) {
+        return orderService.getOrder(id);
+
     }
 
     @DeleteMapping("{id}")
@@ -67,4 +63,22 @@ public class OrderController {
     }
 
 
+    @PostMapping("deals")
+    public DealDTO createDeal(@RequestBody DealDTO dealDTO, @RequestParam Long clientId) {
+        return orderService.createDeal(dealDTO, clientId);
+    }
+    @GetMapping("{orderId}/deals/{dealId}")
+    public DealDTO getDeal(@PathVariable String orderId, @PathVariable String dealId) {
+        return orderService.getDeal(orderId, dealId);
+    }
+
+    @GetMapping("{orderId}/deals")
+    public Iterable<DealDTO> getDeals(@PathVariable String orderId) {
+        return orderService.getDeals(orderId);
+    }
+
+    @GetMapping("deals")
+    public Iterable<DealDTO> getDealsByPersonId(@RequestParam Long personId) {
+        return orderService.getDealsByPersonId(personId);
+    }
 }

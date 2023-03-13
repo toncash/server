@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -28,7 +29,7 @@ public class Order {
     private OrderType orderType;
     private OrderStatus orderStatus;
     private OrderLimit limits;
+    List<Deal> deals;
     private LocalDateTime localDateTime;
-
 
 }
