@@ -86,7 +86,7 @@ public class TonCashBot extends TelegramLongPollingBot {
 
                 Long chatId = update.getCallbackQuery().getFrom().getId();
                 Integer messageId = update.getCallbackQuery().getMessage().getMessageId();
-                orderService.acceptDeal(Long.parseLong(personId), dealId, ownerOrderId, chatId, messageId);
+//                orderService.acceptDeal(Long.parseLong(personId), dealId, ownerOrderId, chatId, messageId);
 //                Long.parseLong(personId), dealId, ownerOrderId, chatId, messageId
             } else if (callbackData.startsWith("deny_deal_")) {
                 System.out.println("diny_deal_");

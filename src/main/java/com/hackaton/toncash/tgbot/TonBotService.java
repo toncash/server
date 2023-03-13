@@ -45,12 +45,12 @@ public class TonBotService {
 
     private static InlineKeyboardMarkup createInlineKeyboard(String dealId, long personId) {
 
-        InlineKeyboardButton applyButton = createButton("Apply", "accept_deal_dealId:" + dealId + ";personId:" + personId, "");
-        InlineKeyboardButton denyButton = createButton("Deny", "deny_deal_dealId:" + dealId + ";personId:" + personId, "");
+//        InlineKeyboardButton applyButton = createButton("Apply", "accept_deal_dealId:" + dealId + ";personId:" + personId, "");
+//        InlineKeyboardButton denyButton = createButton("Deny", "deny_deal_dealId:" + dealId + ";personId:" + personId, "");
         InlineKeyboardButton viewOrder = createButton("View deal", "", "https://toncash.github.io/ui/");
 
         return InlineKeyboardMarkup.builder()
-                .keyboard(Arrays.asList(Collections.singletonList(viewOrder), Arrays.asList(applyButton, denyButton)))
+                .keyboard(Collections.singletonList(Collections.singletonList(viewOrder)))
                 .build();
     }
 

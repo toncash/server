@@ -5,8 +5,10 @@ import com.hackaton.toncash.dto.OrderDTO;
 import com.hackaton.toncash.dto.PersonDTO;
 import com.hackaton.toncash.dto.PersonOrderDTO;
 import com.hackaton.toncash.exception.OrderNotFoundException;
+import com.hackaton.toncash.exception.UserNotFoundException;
 import com.hackaton.toncash.model.*;
 import com.hackaton.toncash.repo.OrderRepo;
+import com.hackaton.toncash.repo.PersonRepo;
 import com.hackaton.toncash.tgbot.TonBotService;
 import com.hackaton.toncash.tgbot.TonCashBot;
 import lombok.AllArgsConstructor;
@@ -33,6 +35,7 @@ import java.util.stream.StreamSupport;
 public class OrderServiceImpl implements OrderService {
     private final OrderRepo orderRepository;
     private final PersonService personService;
+    private final PersonRepo personRepository;
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
     private final TonCashBot bot;
@@ -123,49 +126,23 @@ public class OrderServiceImpl implements OrderService {
         if (status.equals(OrderStatus.PENDING)) {
 //            takeOrder(personId, order, true);
         }
-        if (status.equals(OrderStatus.BAD)) {
-            rejectOrder(orderId, personId);
-        }
-        orderRepository.save(order);
-    }
-
-
-    public void denyOrder(long personId, String orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
-        long ownerId;
-//        if (order.getOrderType().equals(OrderType.BUY)) {
-//            ownerId = order.getBuyerId();
-//            order.setSellerId(personId);
-//        } else {
-//            ownerId = order.getSellerId();
-//            order.setBuyerId(personId);
+//        if (status.equals(OrderStatus.BAD)) {
+//            rejectOrder(orderId, personId);
 //        }
-        String clientUsername = personService.getPerson(personId).getUsername();
-        String ownerMessage = "You denied the offer from the client @" + clientUsername + " for order " + order.getOrderType() + " with " + order.getAmount() + "TON";
-        String clientMessage = "The owner of the order denied your offer";
-//        TonBotService.sendNotification(bot,Long.toString(ownerId), ownerMessage);
-//        TonBotService.sendNotification(bot,Long.toString(personId), clientMessage);
-    }
-
-    @Override
-    public void rejectOrder(String orderId, long personId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
-        //FIXME conditions of reject
-        order.setOrderStatus(OrderStatus.BAD);
-        personService.changeStatusOrderFromPerson(personId, orderId, OrderStatus.BAD);
         orderRepository.save(order);
     }
-
 
     @Override
     public DealDTO createDeal(DealDTO dealDTO, Long clientId) {
         Order order = orderRepository.findById(dealDTO.getOrderId()).orElseThrow(() -> new OrderNotFoundException(dealDTO.getOrderId()));
         Deal deal = madeDeal(order, dealDTO, clientId);
-
+        Person person = personRepository.findById(clientId).orElseThrow(() -> new UserNotFoundException(clientId));
+        person.getCurrentDeals().add(deal);
         dealRequest(order, clientId, deal.getId());
 
         order.getDeals().add(deal);
         orderRepository.save(order);
+        personRepository.save(person);
         return modelMapper.map(deal, DealDTO.class);
 
     }
@@ -188,7 +165,7 @@ public class OrderServiceImpl implements OrderService {
             deal.setBuyerId(clientId);
         }
         if (dealDTO.getAmount() > order.getAmount()) {
-            throw new BadRequestException("Your amount greater than amount of order");
+            throw new IllegalArgumentException("Your amount greater than amount of order");
         }
         return deal;
     }
@@ -199,41 +176,100 @@ public class OrderServiceImpl implements OrderService {
         TonBotService.sendOfferDealNotification(bot, Long.toString(order.getOwnerId()), message, dealId, clientId);
     }
 
-    public void acceptDeal(long clientId, String dealId, Long ownerOrderId, Long chatId, Integer messageId) {
-        System.out.println("accept deal");
+    @Override
+    public DealDTO acceptDeal(String orderId, String dealId) {
         Order order = orderRepository.findByDealsId(dealId);
-        Deal deal = findDealInOrder(dealId, order);
-        float amount = order.getAmount();
-//        order.setAmount(amount-deal.getAmount());
-        deal.setDealStatus(DealStatus.PENDING);
-//
-        String clientUsername = personService.getPerson(clientId).getUsername();
-        String messageOwner = "You accept a client @" + clientUsername + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON";
+        Deal deal = findDealInList(dealId, order.getDeals());
+
+        manageDeal(order, deal, true);
+
+        return modelMapper.map(deal, DealDTO.class);
+    }
+
+    @Override
+    public void denyDeal(String orderId, String dealId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+        Deal deal = findDealInList(dealId, order.getDeals());
+
+        manageDeal(order, deal, false);
+    }
+
+    private void manageDeal(Order order, Deal deal, boolean dealAction) {
+        long ownerId = order.getOwnerId();
+        long clientId;
+        if (ownerId == deal.getBuyerId()) {
+            clientId = deal.getSellerId();
+        } else {
+            clientId = deal.getBuyerId();
+        }
+        Person client = personRepository.findById(clientId).orElseThrow(() -> new UserNotFoundException(clientId));
+        String clientUsername = client.getUsername();
+        Deal clientDeal = findDealInList( deal.getId(), client.getCurrentDeals());
+
         String orderTypeForClient = "BUY";
         if (order.getOrderType().equals(OrderType.BUY)) {
             orderTypeForClient = "SELL";
         }
-        String messageClient = "Your offer has been confirmed @" + clientUsername + " by the deal " + orderTypeForClient + " with " + deal.getAmount() + "TON";
-        TonBotService.sendNotification(bot, Long.toString(clientId), messageClient);
-        TonBotService.sendEditMassage(bot, chatId, messageId, messageOwner, order.getId(), dealId, clientId);
+
+        if (dealAction) {
+            float amount = order.getAmount();
+            order.setAmount(amount - deal.getAmount());
+            deal.setDealStatus(DealStatus.PENDING);
+            clientDeal.setDealStatus(DealStatus.PENDING);
+            String messageOwner = "You accept the client @" + clientUsername + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON";
+            String messageClient = "Your offer has been confirmed @" + clientUsername + " by the deal " + orderTypeForClient + " with " + deal.getAmount() + "TON";
+            TonBotService.sendNotification(bot, Long.toString(clientId), messageClient);
+            TonBotService.sendNotification(bot, Long.toString(ownerId), messageOwner);
+        }else {
+            order.getDeals().remove(deal);
+            deal.setDealStatus(DealStatus.DENIED);
+            clientDeal.setDealStatus(DealStatus.DENIED);
+
+            String messageOwner = "You deny the client @" + clientUsername + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON";
+            String messageClient = "Your offer has been denied by the deal " + orderTypeForClient + " with " + deal.getAmount() + "TON";
+            TonBotService.sendNotification(bot, Long.toString(clientId), messageClient);
+            TonBotService.sendNotification(bot, Long.toString(ownerId), messageOwner);
+
+        }
+
+        orderRepository.save(order);
+        personRepository.save(client);
     }
+//    public void acceptDeal(long clientId, String dealId, Long ownerOrderId, Long chatId, Integer messageId) {
+//        System.out.println("accept deal");
+//        Order order = orderRepository.findByDealsId(dealId);
+//        Deal deal = findDealInOrder(dealId, order);
+//        float amount = order.getAmount();
+////        order.setAmount(amount-deal.getAmount());
+//        deal.setDealStatus(DealStatus.PENDING);
+////
+//        String clientUsername = personService.getPerson(clientId).getUsername();
+//        String messageOwner = "You accept a client @" + clientUsername + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON";
+//        String orderTypeForClient = "BUY";
+//        if (order.getOrderType().equals(OrderType.BUY)) {
+//            orderTypeForClient = "SELL";
+//        }
+//        String messageClient = "Your offer has been confirmed @" + clientUsername + " by the deal " + orderTypeForClient + " with " + deal.getAmount() + "TON";
+//        TonBotService.sendNotification(bot, Long.toString(clientId), messageClient);
+//        TonBotService.sendEditMassage(bot, chatId, messageId, messageOwner, order.getId(), dealId, clientId);
+//    }
+
 
     @Override
     public DealDTO getDeal(String orderId, String dealId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
-        Deal deal = findDealInOrder(dealId, order);
+        Deal deal = findDealInList(dealId, order.getDeals());
         return modelMapper.map(deal, DealDTO.class);
-
     }
 
-    private Deal findDealInOrder(String dealId, Order order) {
+    private Deal findDealInList(String dealId, List<Deal> deals) {
         Deal fakeDeal = new Deal();
         fakeDeal.setId(dealId);
-        int index = order.getDeals().indexOf(fakeDeal);
+        int index = deals.indexOf(fakeDeal);
         if (index < 0) {
             throw new BadRequestException("Deal with id - " + dealId + " doesn't exist");
         }
-        return order.getDeals().get(index);
+        return deals.get(index);
     }
 
     @Override
@@ -244,16 +280,6 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public Iterable<DealDTO> getDealsByPersonId(Long personId) {
-//        Query query = new Query();
-//        query.addCriteria(Criteria.where("deals.buyerId").is(personId));
-//        query.addCriteria(Criteria.where("deals.sellerId").is(personId));
-//        List<Deal> deals = mongoTemplate.find(query, Order.class);
-        return orderRepository.findByDealsBuyerIdOrDealsSellerId(personId).stream()
-                .map(deal -> modelMapper.map(deal, DealDTO.class))
-                .collect(Collectors.toList());
-    }
 
     private PersonOrderDTO mapOrderDTOtoPersonOrderDTO(OrderDTO orderDTO) {
         PersonDTO personDTO = personService.getPerson(orderDTO.getOwnerId());

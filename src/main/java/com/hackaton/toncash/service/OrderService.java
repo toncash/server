@@ -14,6 +14,7 @@ public interface OrderService {
     PersonOrderDTO getOrder(String id);
 
     Iterable<PersonOrderDTO> getOrders();
+
     Iterable<PersonOrderDTO> getOrdersByPersonId(long personId);
 
     Iterable<PersonOrderDTO> getOrdersByLocation(Point point, double distance);
@@ -24,13 +25,13 @@ public interface OrderService {
 
     void changeOrderStatus(String orderId, long personId, OrderStatus status);
 
-    void rejectOrder(String orderId, long personId);
-
     DealDTO createDeal(DealDTO dealDTO, Long clientId);
 
     DealDTO getDeal(String orderId, String dealId);
 
     Iterable<DealDTO> getDeals(String orderId);
 
-    Iterable<DealDTO> getDealsByPersonId(Long personId);
+    DealDTO acceptDeal(String orderId, String dealId);
+
+    void denyDeal(String orderId, String dealId);
 }

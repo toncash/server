@@ -49,10 +49,6 @@ public class OrderController {
         orderService.changeOrderStatus(orderId, personId, status);
     }
 
-    @PostMapping("{orderId}/person/{personId}")
-    public void rejectOrder(@PathVariable String orderId, @PathVariable long personId) {
-        orderService.rejectOrder(orderId, personId);
-    }
 
     @GetMapping("/location")
     public Iterable<PersonOrderDTO> getOrdersByLocation(@RequestParam String location, double distance) {
@@ -67,6 +63,16 @@ public class OrderController {
     public DealDTO createDeal(@RequestBody DealDTO dealDTO, @RequestParam Long clientId) {
         return orderService.createDeal(dealDTO, clientId);
     }
+
+    @PostMapping("{orderId}/deals/{dealId}")
+    public DealDTO acceptDeal(@PathVariable String orderId, @PathVariable String dealId) {
+       return orderService.acceptDeal(orderId, dealId);
+    }
+
+    @PutMapping ("{orderId}/deals/{dealId}")
+    public void denyDeal(@PathVariable String orderId, @PathVariable String dealId) {
+        orderService.denyDeal(orderId, dealId);
+    }
     @GetMapping("{orderId}/deals/{dealId}")
     public DealDTO getDeal(@PathVariable String orderId, @PathVariable String dealId) {
         return orderService.getDeal(orderId, dealId);
@@ -77,8 +83,5 @@ public class OrderController {
         return orderService.getDeals(orderId);
     }
 
-    @GetMapping("deals")
-    public Iterable<DealDTO> getDealsByPersonId(@RequestParam Long personId) {
-        return orderService.getDealsByPersonId(personId);
-    }
+
 }
