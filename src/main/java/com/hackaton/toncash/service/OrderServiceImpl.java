@@ -210,9 +210,6 @@ public class OrderServiceImpl implements OrderService {
         if (order.getOrderType().equals(OrderType.BUY)) {
             orderTypeForClient = "SELL";
         }
-        String messageClient = "Your offer has been confirmed @" + clientUsername + " by the deal " + orderTypeForClient + " with " + deal.getAmount() + "TON";
-//        TonBotService.sendNotification(bot, Long.toString(clientId), messageClient);
-//        TonBotService.sendEditMassage(bot, chatId, messageId, messageOwner, order.getId(), dealId, clientId);
 
         if (dealAction) {
             float amount = order.getAmount();
