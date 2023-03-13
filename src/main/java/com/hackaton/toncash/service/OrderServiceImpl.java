@@ -35,7 +35,7 @@ public class OrderServiceImpl implements OrderService {
     private final PersonService personService;
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
-    private final TonCashBot bot;
+//    private final TonCashBot bot;
 
 
     @Override
@@ -196,7 +196,7 @@ public class OrderServiceImpl implements OrderService {
     private void dealRequest(Order order, long clientId, String dealId) {
         String clientUsername = personService.getPerson(clientId).getUsername();
         String message = "You have an offer from @" + clientUsername + " by your order " + order.getOrderType() + " " + order.getAmount() + "TON";
-        TonBotService.sendOfferDealNotification(bot, Long.toString(order.getOwnerId()), message, dealId, clientId);
+//        TonBotService.sendOfferDealNotification(bot, Long.toString(order.getOwnerId()), message, dealId, clientId);
     }
 
     public void acceptDeal(long clientId, String dealId, Long ownerOrderId, Long chatId, Integer messageId) {
@@ -214,8 +214,8 @@ public class OrderServiceImpl implements OrderService {
             orderTypeForClient = "SELL";
         }
         String messageClient = "Your offer has been confirmed @" + clientUsername + " by the deal " + orderTypeForClient + " with " + deal.getAmount() + "TON";
-        TonBotService.sendNotification(bot, Long.toString(clientId), messageClient);
-        TonBotService.sendEditMassage(bot, chatId, messageId, messageOwner, order.getId(), dealId, clientId);
+//        TonBotService.sendNotification(bot, Long.toString(clientId), messageClient);
+//        TonBotService.sendEditMassage(bot, chatId, messageId, messageOwner, order.getId(), dealId, clientId);
     }
 
     @Override
