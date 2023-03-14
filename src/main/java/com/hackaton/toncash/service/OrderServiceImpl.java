@@ -1,16 +1,11 @@
 package com.hackaton.toncash.service;
 
-import com.hackaton.toncash.dto.DealDTO;
-import com.hackaton.toncash.dto.OrderDTO;
-import com.hackaton.toncash.dto.PersonDTO;
-import com.hackaton.toncash.dto.PersonOrderDTO;
+import com.hackaton.toncash.dto.*;
 import com.hackaton.toncash.exception.OrderNotFoundException;
 import com.hackaton.toncash.exception.UserNotFoundException;
 import com.hackaton.toncash.model.*;
 import com.hackaton.toncash.repo.OrderRepo;
 import com.hackaton.toncash.repo.PersonRepo;
-import com.hackaton.toncash.tgbot.TonBotService;
-import com.hackaton.toncash.tgbot.TonCashBot;
 import lombok.AllArgsConstructor;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
@@ -38,7 +33,7 @@ public class OrderServiceImpl implements OrderService {
     private final PersonRepo personRepository;
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
-    private final TonCashBot bot;
+//    private final TonCashBot bot;
 
 
     @Override
@@ -134,7 +129,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public DealDTO createDeal(DealDTO dealDTO, Long clientId) {
+    public PersonDealDTO createDeal(DealDTO dealDTO, Long clientId) {
         Order order = orderRepository.findById(dealDTO.getOrderId()).orElseThrow(() -> new OrderNotFoundException(dealDTO.getOrderId()));
         Deal deal = madeDeal(order, dealDTO, clientId);
         Person person = personRepository.findById(clientId).orElseThrow(() -> new UserNotFoundException(clientId));
@@ -144,7 +139,9 @@ public class OrderServiceImpl implements OrderService {
         order.getDeals().add(deal);
         orderRepository.save(order);
         personRepository.save(person);
-        return modelMapper.map(deal, DealDTO.class);
+        PersonDTO personDTO = personService.getPerson(person.getId());
+        return new PersonDealDTO( personDTO, modelMapper.map(deal, DealDTO.class));
+
 
     }
 
@@ -154,6 +151,8 @@ public class OrderServiceImpl implements OrderService {
                 .localDateTime(LocalDateTime.now())
                 .dealStatus(DealStatus.CURRENT)
                 .addressContract(dealDTO.getAddressContract())
+                .addressBuyer(dealDTO.getAddressBuyer())
+                .contractDeployed(dealDTO.isContractDeployed())
                 .amount(dealDTO.getAmount())
                 .orderId(dealDTO.getOrderId())
                 .build();
@@ -174,17 +173,19 @@ public class OrderServiceImpl implements OrderService {
     private void dealRequest(Order order, long clientId, String dealId) {
         PersonDTO clientPerson = personService.getPerson(clientId);
         String message = "You have an offer from @" + clientPerson.getUsername() + " by your order " + order.getOrderType() + " " + order.getAmount() + "TON";
-        TonBotService.sendOfferDealNotification(bot, Long.toString(clientPerson.getTelegramId()), message, dealId, clientId);
+        String clientUsername = personService.getPerson(clientId).getUsername();
+//        TonBotService.sendOfferDealNotification(bot, Long.toString(order.getOwnerId()), message, dealId, clientId);
     }
 
     @Override
-    public DealDTO acceptDeal(String orderId, String dealId) {
+    public PersonDealDTO acceptDeal(String orderId, String dealId) {
         Order order = orderRepository.findByDealsId(dealId);
         Deal deal = findDealInList(dealId, order.getDeals());
 
         manageDeal(order, deal, true);
 
-        return modelMapper.map(deal, DealDTO.class);
+        return mapDealDTOtoPersonDealDTO(modelMapper.map(deal, DealDTO.class), order);
+
     }
 
     @Override
@@ -206,7 +207,7 @@ public class OrderServiceImpl implements OrderService {
         Person client = personRepository.findById(clientId).orElseThrow(() -> new UserNotFoundException(clientId));
         long ownerTelegramId = personService.getPerson(ownerId).getTelegramId();
         String clientUsername = client.getUsername();
-        Deal clientDeal = findDealInList( deal.getId(), client.getCurrentDeals());
+        Deal clientDeal = findDealInList(deal.getId(), client.getCurrentDeals());
 
         String orderTypeForClient = "BUY";
         if (order.getOrderType().equals(OrderType.BUY)) {
@@ -220,8 +221,8 @@ public class OrderServiceImpl implements OrderService {
             clientDeal.setDealStatus(DealStatus.PENDING);
             String messageOwner = "You accept the client @" + clientUsername + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON";
             String messageClient = "Your offer has been confirmed @" + clientUsername + " by the deal " + orderTypeForClient + " with " + deal.getAmount() + "TON";
-            TonBotService.sendNotification(bot, Long.toString(client.getTelegramId()), messageClient);
-            TonBotService.sendNotification(bot, Long.toString(ownerTelegramId), messageOwner);
+//            TonBotService.sendNotification(bot, Long.toString(client.getTelegramId()), messageClient);
+//            TonBotService.sendNotification(bot, Long.toString(ownerTelegramId), messageOwner);
         }else {
             order.getDeals().remove(deal);
             deal.setDealStatus(DealStatus.DENIED);
@@ -229,8 +230,8 @@ public class OrderServiceImpl implements OrderService {
 
             String messageOwner = "You deny the client @" + clientUsername + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON";
             String messageClient = "Your offer has been denied by the deal " + orderTypeForClient + " with " + deal.getAmount() + "TON";
-            TonBotService.sendNotification(bot, Long.toString(client.getTelegramId()), messageClient);
-            TonBotService.sendNotification(bot, Long.toString(ownerTelegramId), messageOwner);
+//            TonBotService.sendNotification(bot, Long.toString(client.getTelegramId()), messageClient);
+//            TonBotService.sendNotification(bot, Long.toString(ownerTelegramId), messageOwner);
 
         }
 
@@ -258,10 +259,10 @@ public class OrderServiceImpl implements OrderService {
 
 
     @Override
-    public DealDTO getDeal(String orderId, String dealId) {
+    public PersonDealDTO getOrderDeal(String orderId, String dealId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
         Deal deal = findDealInList(dealId, order.getDeals());
-        return modelMapper.map(deal, DealDTO.class);
+        return mapDealDTOtoPersonDealDTO(modelMapper.map(deal, DealDTO.class), order);
     }
 
     private Deal findDealInList(String dealId, List<Deal> deals) {
@@ -275,10 +276,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Iterable<DealDTO> getDeals(String orderId) {
+    public Iterable<PersonDealDTO> getOrderDeals(String orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+
         return order.getDeals().stream()
                 .map(deal -> modelMapper.map(deal, DealDTO.class))
+                .map(d-> mapDealDTOtoPersonDealDTO(d, order))
                 .collect(Collectors.toList());
     }
 
@@ -288,5 +291,18 @@ public class OrderServiceImpl implements OrderService {
         return new PersonOrderDTO(personDTO, orderDTO);
     }
 
+    private PersonDealDTO mapDealDTOtoPersonDealDTO(DealDTO dealDTO, Order order) {
+        long dealOwner = getDealOwner(dealDTO, order);
+        PersonDTO personDTO = personService.getPerson(dealOwner);
+        return new PersonDealDTO(personDTO, dealDTO);
+    }
+
+    private long getDealOwner(DealDTO dealDTO, Order order) {
+        long ownerId = order.getOwnerId();
+        if (ownerId != dealDTO.getBuyerId()) {
+            ownerId = dealDTO.getSellerId();
+        }
+        return ownerId;
+    }
 
 }

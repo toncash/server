@@ -1,6 +1,7 @@
 package com.hackaton.toncash.controller;
 
 import com.hackaton.toncash.dto.DealDTO;
+import com.hackaton.toncash.dto.PersonDealDTO;
 import com.hackaton.toncash.dto.OrderDTO;
 import com.hackaton.toncash.dto.PersonOrderDTO;
 import com.hackaton.toncash.model.OrderStatus;
@@ -60,12 +61,12 @@ public class OrderController {
 
 
     @PostMapping("deals")
-    public DealDTO createDeal(@RequestBody DealDTO dealDTO, @RequestParam Long clientId) {
+    public PersonDealDTO createDeal(@RequestBody DealDTO dealDTO, @RequestParam Long clientId) {
         return orderService.createDeal(dealDTO, clientId);
     }
 
     @PostMapping("{orderId}/deals/{dealId}")
-    public DealDTO acceptDeal(@PathVariable String orderId, @PathVariable String dealId) {
+    public PersonDealDTO acceptDeal(@PathVariable String orderId, @PathVariable String dealId) {
        return orderService.acceptDeal(orderId, dealId);
     }
 
@@ -74,13 +75,13 @@ public class OrderController {
         orderService.denyDeal(orderId, dealId);
     }
     @GetMapping("{orderId}/deals/{dealId}")
-    public DealDTO getDeal(@PathVariable String orderId, @PathVariable String dealId) {
-        return orderService.getDeal(orderId, dealId);
+    public PersonDealDTO getOrderDeal(@PathVariable String orderId, @PathVariable String dealId) {
+        return orderService.getOrderDeal(orderId, dealId);
     }
 
     @GetMapping("{orderId}/deals")
-    public Iterable<DealDTO> getDeals(@PathVariable String orderId) {
-        return orderService.getDeals(orderId);
+    public Iterable<PersonDealDTO> getOrderDeals(@PathVariable String orderId) {
+        return orderService.getOrderDeals(orderId);
     }
 
 

@@ -16,9 +16,11 @@ public class Deal {
     @Id
     String id;
     String addressContract;
+    String addressBuyer;
+    boolean contractDeployed;
     String orderId;
-    Long buyerId;
-    Long sellerId;
+    long buyerId;
+    long sellerId;
     float amount;
     DealStatus dealStatus;
     private LocalDateTime localDateTime;
