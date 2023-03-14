@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 public class DealDTO {
     String id;
     String addressContract;
+    String addressBuyer;
+    boolean contractDeployed;
     String orderId;
     String buyerId;
     String sellerId;

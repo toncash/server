@@ -153,6 +153,8 @@ public class OrderServiceImpl implements OrderService {
                 .localDateTime(LocalDateTime.now())
                 .dealStatus(DealStatus.CURRENT)
                 .addressContract(dealDTO.getAddressContract())
+                .addressBuyer(dealDTO.getAddressBuyer())
+                .contractDeployed(dealDTO.isContractDeployed())
                 .amount(dealDTO.getAmount())
                 .orderId(dealDTO.getOrderId())
                 .build();
