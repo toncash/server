@@ -24,13 +24,5 @@ public interface OrderService {
 
     void changeOrderStatus(String orderId, long personId, OrderStatus status);
 
-    PersonDealDTO createDeal(DealDTO dealDTO, Long clientId);
 
-    PersonDealDTO getOrderDeal(String orderId, String dealId);
-
-    Iterable<PersonDealDTO> getOrderDeals(String orderId);
-
-    PersonDealDTO acceptDeal(String orderId, String dealId);
-
-    void denyDeal(String orderId, String dealId);
 }

@@ -5,10 +5,9 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @Repository
-public interface PersonRepo extends CrudRepository<Person, Long> {
+public interface PersonRepository extends CrudRepository<Person, Long> {
     Optional<Person> findByUsername(String username);
     Optional<Person> findByTelegramId(Long telegramId);
 }

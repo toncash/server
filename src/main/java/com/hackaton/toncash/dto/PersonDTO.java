@@ -18,7 +18,7 @@ public class PersonDTO {
     private String username;
     private String avatarURL;
     private Set<String> currentOrders;
-    private List<Deal> currentDeals;
+    private List<DealDTO> currentDeals;
     private int finishedOrders;
     private int badOrders;
     private Set<String> community;

@@ -18,8 +18,6 @@ import java.util.List;
 public class OrderDTO {
     private String id;
     private Long ownerId;
-    private Long buyerId;
-    private Long sellerId;
     private LocalDateTime localDateTime;
     private float amount;
     private Point location;
@@ -28,6 +26,6 @@ public class OrderDTO {
     private OrderLimit limits;
     private OrderType orderType;
     private OrderStatus orderStatus;
-    List<Deal> deals;
+    List<DealDTO> deals;
 
 }

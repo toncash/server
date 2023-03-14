@@ -28,7 +28,7 @@ public class Person {
     private Set<String> finishedOrders;
     private Set<String> badOrders;
 
-    private List<Deal> currentDeals;
+    private Set<String> currentDeals;
     private Set<String> community;
 
     private PersonLevel level;
@@ -38,7 +38,7 @@ public class Person {
         this.currentOrders = new HashSet<>();
         this.finishedOrders = new HashSet<>();
         this.badOrders = new HashSet<>();
-        this.currentDeals = new ArrayList<>();
+        this.currentDeals = new HashSet<>();
         this.community = new HashSet<>();
         this.level = PersonLevel.BASIC;
     }

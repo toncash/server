@@ -59,30 +59,4 @@ public class OrderController {
         return orderService.getOrdersByLocation(new Point(latitude, longitude), distance);
     }
 
-
-    @PostMapping("deals")
-    public PersonDealDTO createDeal(@RequestBody DealDTO dealDTO, @RequestParam Long clientId) {
-        return orderService.createDeal(dealDTO, clientId);
-    }
-
-    @PostMapping("{orderId}/deals/{dealId}")
-    public PersonDealDTO acceptDeal(@PathVariable String orderId, @PathVariable String dealId) {
-       return orderService.acceptDeal(orderId, dealId);
-    }
-
-    @PutMapping ("{orderId}/deals/{dealId}")
-    public void denyDeal(@PathVariable String orderId, @PathVariable String dealId) {
-        orderService.denyDeal(orderId, dealId);
-    }
-    @GetMapping("{orderId}/deals/{dealId}")
-    public PersonDealDTO getOrderDeal(@PathVariable String orderId, @PathVariable String dealId) {
-        return orderService.getOrderDeal(orderId, dealId);
-    }
-
-    @GetMapping("{orderId}/deals")
-    public Iterable<PersonDealDTO> getOrderDeals(@PathVariable String orderId) {
-        return orderService.getOrderDeals(orderId);
-    }
-
-
 }

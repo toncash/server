@@ -4,26 +4,32 @@ import com.hackaton.toncash.dto.DealDTO;
 import com.hackaton.toncash.dto.PersonDTO;
 import com.hackaton.toncash.exception.UserExistException;
 import com.hackaton.toncash.exception.UserNotFoundException;
+import com.hackaton.toncash.model.Deal;
 import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.model.Person;
-import com.hackaton.toncash.repo.PersonRepo;
+import com.hackaton.toncash.repo.DealRepository;
+import com.hackaton.toncash.repo.PersonRepository;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
-import java.time.temporal.TemporalAdjuster;
-import java.time.temporal.TemporalField;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+import static com.hackaton.toncash.service.CommonMethods.mapToPersonDTO;
 
 @Service
 @AllArgsConstructor
 public class PersonServiceImpl implements PersonService {
 
-    private final PersonRepo personRepository;
+    private final PersonRepository personRepository;
+    private final DealRepository dealRepository;
     private final ModelMapper modelMapper;
+
 
     @Override
     public void addPerson(PersonDTO personDto) {
@@ -33,7 +39,7 @@ public class PersonServiceImpl implements PersonService {
         personRepository.save(modelMapper.map(personDto, Person.class));
     }
 
-    private long createIdFromLocalDateTime(){
+    private long createIdFromLocalDateTime() {
         LocalDateTime now = LocalDateTime.now();
         Instant instant = now.toInstant(ZoneOffset.UTC);
         return instant.toEpochMilli() - ZoneOffset.UTC.getTotalSeconds() * 1000L;
@@ -57,8 +63,10 @@ public class PersonServiceImpl implements PersonService {
                 person.setAvatarURL(personDTO.getAvatarURL());
             }
         }
-        return mapToPersonDTO(personRepository.save(person));
+        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
+        return mapToPersonDTO(personRepository.save(person), deals, modelMapper);
     }
+
     @Override
     public PersonDTO firstInPerson(long id, PersonDTO personDTO) {
         System.out.println(personDTO.getAvatarURL());
@@ -80,18 +88,22 @@ public class PersonServiceImpl implements PersonService {
                 person.setAvatarURL(personDTO.getAvatarURL());
             }
         }
-        return mapToPersonDTO(personRepository.save(person));
+        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
+        return mapToPersonDTO(personRepository.save(person), deals, modelMapper);
     }
 
     @Override
     public PersonDTO getPerson(long id) {
-        return mapToPersonDTO(personRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)));
+        Person person = personRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
+        return mapToPersonDTO(person, deals, modelMapper);
+
     }
 
     @Override
     public Iterable<PersonDTO> getPersons() {
         return StreamSupport.stream(personRepository.findAll().spliterator(), false)
-                .map(this::mapToPersonDTO)
+                .map(person->CommonMethods.mapToPersonDTO(person, dealRepository.findAllById(person.getCurrentDeals()), modelMapper))
                 .collect(Collectors.toList());
     }
 
@@ -106,7 +118,8 @@ public class PersonServiceImpl implements PersonService {
         Person person = personRepository.findById(personDTO.getId()).orElseThrow(() -> new UserExistException(id));
         BeanUtils.copyProperties(personDTO, person, CommonMethods.getNullPropertyNames(personDTO));
 
-        return mapToPersonDTO(personRepository.save(person));
+        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
+        return mapToPersonDTO(person, deals, modelMapper);
 
     }
 
@@ -114,14 +127,16 @@ public class PersonServiceImpl implements PersonService {
     public PersonDTO addOrderToPerson(long personId, String orderId) {
         Person person = personRepository.findById(personId).orElseThrow(() -> new UserNotFoundException(personId));
         person.getCurrentOrders().add(orderId);
-        return mapToPersonDTO(personRepository.save(person));
+        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
+        return mapToPersonDTO(person, deals, modelMapper);
     }
 
     @Override
     public PersonDTO removeOrderFromPerson(long personId, String orderId) {
         Person person = personRepository.findById(personId).orElseThrow(() -> new UserNotFoundException(personId));
         person.getCurrentOrders().remove(orderId);
-        return mapToPersonDTO(personRepository.save(person));
+        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
+        return mapToPersonDTO(person, deals, modelMapper);
 
     }
 
@@ -139,7 +154,8 @@ public class PersonServiceImpl implements PersonService {
             person.getBadOrders().add(orderId);
         }
         person.setRank(getRank(person));
-        return mapToPersonDTO(personRepository.save(person));
+        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
+        return mapToPersonDTO(personRepository.save(person), deals, modelMapper);
 
     }
 
@@ -152,23 +168,9 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public Iterable<DealDTO> getDealsByPersonId(Long personId) {
         Person person = personRepository.findById(personId).orElseThrow(() -> new UserNotFoundException(personId));
-        return person.getCurrentDeals().stream()
-                .map(deal -> modelMapper.map(deal, DealDTO.class))
-                .collect(Collectors.toList());
+        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
+        return CommonMethods.getDealsDto(modelMapper, deals);
     }
 
-    private PersonDTO mapToPersonDTO(Person person) {
-        return PersonDTO.builder()
-                .id(person.getId())
-                .username(person.getUsername())
-                .avatarURL(person.getAvatarURL())
-                .telegramId(person.getTelegramId())
-                .currentOrders(person.getCurrentOrders())
-                .finishedOrders(person.getFinishedOrders().size())
-                .badOrders(person.getBadOrders().size())
-                .currentDeals(person.getCurrentDeals())
-                .community(person.getCommunity())
-                .rank(person.getRank())
-                .build();
-    }
+
 }
