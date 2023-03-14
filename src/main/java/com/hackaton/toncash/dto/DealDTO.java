@@ -17,8 +17,8 @@ public class DealDTO {
     String addressBuyer;
     boolean contractDeployed;
     String orderId;
-    String buyerId;
-    String sellerId;
+    long buyerId;
+    long sellerId;
     int amount;
     DealStatus dealStatus;
     private LocalDateTime localDateTime;
