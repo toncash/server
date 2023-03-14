@@ -12,6 +12,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.*;
+import java.time.temporal.TemporalAdjuster;
+import java.time.temporal.TemporalField;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -30,25 +33,48 @@ public class PersonServiceImpl implements PersonService {
         personRepository.save(modelMapper.map(personDto, Person.class));
     }
 
+    private long createIdFromLocalDateTime(){
+        LocalDateTime now = LocalDateTime.now();
+        Instant instant = now.toInstant(ZoneOffset.UTC);
+        return instant.toEpochMilli() - ZoneOffset.UTC.getTotalSeconds() * 1000L;
+    }
+
+    @Override
+    public PersonDTO entrance(PersonDTO personDTO) {
+        System.out.println(personDTO.getAvatarURL());
+        Person person = personRepository.findByTelegramId(personDTO.getTelegramId()).orElse(null);
+        if (person == null) {
+            person = new Person();
+            person.setId(createIdFromLocalDateTime());
+            person.setUsername(personDTO.getUsername());
+            person.setTelegramId(personDTO.getTelegramId());
+            person.setAvatarURL(personDTO.getAvatarURL());
+        } else {
+            if (person.getUsername() == null || !person.getUsername().equals(personDTO.getUsername())) {
+                person.setUsername(personDTO.getUsername());
+            }
+            if (person.getAvatarURL() == null || !person.getAvatarURL().equals(personDTO.getAvatarURL())) {
+                person.setAvatarURL(personDTO.getAvatarURL());
+            }
+        }
+        return mapToPersonDTO(personRepository.save(person));
+    }
     @Override
     public PersonDTO firstInPerson(long id, PersonDTO personDTO) {
         System.out.println(personDTO.getAvatarURL());
         Person person = personRepository.findById(id).orElse(null);
         if (person == null) {
             person = new Person();
-            person.setId(id);
+            person.setId(createIdFromLocalDateTime());
             person.setUsername(personDTO.getUsername());
-            person.setChatId(personDTO.getChatId());
+            person.setTelegramId(personDTO.getTelegramId());
             person.setAvatarURL(personDTO.getAvatarURL());
         } else {
             if (person.getUsername() == null || !person.getUsername().equals(personDTO.getUsername())) {
                 person.setUsername(personDTO.getUsername());
             }
-            System.out.println(person.getChatId());
-            System.out.println(personDTO.getChatId());
-            System.out.println(person.getChatId() != personDTO.getChatId());
-            if (person.getChatId() != personDTO.getChatId()) {
-                person.setChatId(personDTO.getChatId());
+            if (person.getTelegramId() != personDTO.getTelegramId()) {
+                person.setTelegramId(personDTO.getTelegramId());
             }
             if (person.getAvatarURL() == null || !person.getAvatarURL().equals(personDTO.getAvatarURL())) {
                 person.setAvatarURL(personDTO.getAvatarURL());
@@ -85,15 +111,15 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public PersonDTO addOrderToPerson(long userId, String orderId) {
-        Person person = personRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+    public PersonDTO addOrderToPerson(long personId, String orderId) {
+        Person person = personRepository.findById(personId).orElseThrow(() -> new UserNotFoundException(personId));
         person.getCurrentOrders().add(orderId);
         return mapToPersonDTO(personRepository.save(person));
     }
 
     @Override
-    public PersonDTO removeOrderFromPerson(long userId, String orderId) {
-        Person person = personRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+    public PersonDTO removeOrderFromPerson(long personId, String orderId) {
+        Person person = personRepository.findById(personId).orElseThrow(() -> new UserNotFoundException(personId));
         person.getCurrentOrders().remove(orderId);
         return mapToPersonDTO(personRepository.save(person));
 
@@ -136,7 +162,7 @@ public class PersonServiceImpl implements PersonService {
                 .id(person.getId())
                 .username(person.getUsername())
                 .avatarURL(person.getAvatarURL())
-                .chatId(person.getChatId())
+                .telegramId(person.getTelegramId())
                 .currentOrders(person.getCurrentOrders())
                 .finishedOrders(person.getFinishedOrders().size())
                 .badOrders(person.getBadOrders().size())

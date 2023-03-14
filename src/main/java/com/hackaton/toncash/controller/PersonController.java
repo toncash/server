@@ -15,9 +15,16 @@ public class PersonController {
 
     @PostMapping("{id}")
     public PersonDTO firstInPerson(@PathVariable long id, @RequestBody PersonDTO personDTO) {
-        System.out.println(personDTO.getChatId());
+        System.out.println(personDTO.getTelegramId());
         System.out.println(personDTO.getUsername());
         return personService.firstInPerson(id, personDTO);
+    }
+
+    @PostMapping()
+    public PersonDTO firstInPerson(@RequestBody PersonDTO personDTO) {
+        System.out.println(personDTO.getTelegramId());
+        System.out.println(personDTO.getUsername());
+        return personService.entrance( personDTO);
     }
 
     @GetMapping("{id}")

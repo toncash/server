@@ -19,7 +19,7 @@ public class Person {
     @Id
     private long id;
 
-    private long chatId;
+    private long telegramId;
 
     private String username;
 

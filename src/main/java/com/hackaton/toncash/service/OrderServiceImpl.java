@@ -48,12 +48,13 @@ public class OrderServiceImpl implements OrderService {
         order.setDeals(new ArrayList<>());
         order.setLocalDateTime(LocalDateTime.now());
         long personId = orderDto.getOwnerId();
+        long personTelegramId = personService.getPerson(personId).getTelegramId();
         orderRepository.save(order);
 
         personService.addOrderToPerson(personId, order.getId());
 
         String message = "You created order for " + order.getOrderType() + " with " + order.getAmount() + "TON";
-//        TonBotService.sendNotification(bot,Long.toString(personId), message);
+//        TonBotService.sendNotification(bot,Long.toString(personTelegramId), message);
 
         return mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class));
 
@@ -171,9 +172,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void dealRequest(Order order, long clientId, String dealId) {
-        String clientUsername = personService.getPerson(clientId).getUsername();
-        String message = "You have an offer from @" + clientUsername + " by your order " + order.getOrderType() + " " + order.getAmount() + "TON";
-        TonBotService.sendOfferDealNotification(bot, Long.toString(order.getOwnerId()), message, dealId, clientId);
+        PersonDTO clientPerson = personService.getPerson(clientId);
+        String message = "You have an offer from @" + clientPerson.getUsername() + " by your order " + order.getOrderType() + " " + order.getAmount() + "TON";
+        TonBotService.sendOfferDealNotification(bot, Long.toString(clientPerson.getTelegramId()), message, dealId, clientId);
     }
 
     @Override
@@ -203,6 +204,7 @@ public class OrderServiceImpl implements OrderService {
             clientId = deal.getBuyerId();
         }
         Person client = personRepository.findById(clientId).orElseThrow(() -> new UserNotFoundException(clientId));
+        long ownerTelegramId = personService.getPerson(ownerId).getTelegramId();
         String clientUsername = client.getUsername();
         Deal clientDeal = findDealInList( deal.getId(), client.getCurrentDeals());
 
@@ -218,8 +220,8 @@ public class OrderServiceImpl implements OrderService {
             clientDeal.setDealStatus(DealStatus.PENDING);
             String messageOwner = "You accept the client @" + clientUsername + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON";
             String messageClient = "Your offer has been confirmed @" + clientUsername + " by the deal " + orderTypeForClient + " with " + deal.getAmount() + "TON";
-            TonBotService.sendNotification(bot, Long.toString(clientId), messageClient);
-            TonBotService.sendNotification(bot, Long.toString(ownerId), messageOwner);
+            TonBotService.sendNotification(bot, Long.toString(client.getTelegramId()), messageClient);
+            TonBotService.sendNotification(bot, Long.toString(ownerTelegramId), messageOwner);
         }else {
             order.getDeals().remove(deal);
             deal.setDealStatus(DealStatus.DENIED);
@@ -227,8 +229,8 @@ public class OrderServiceImpl implements OrderService {
 
             String messageOwner = "You deny the client @" + clientUsername + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON";
             String messageClient = "Your offer has been denied by the deal " + orderTypeForClient + " with " + deal.getAmount() + "TON";
-            TonBotService.sendNotification(bot, Long.toString(clientId), messageClient);
-            TonBotService.sendNotification(bot, Long.toString(ownerId), messageOwner);
+            TonBotService.sendNotification(bot, Long.toString(client.getTelegramId()), messageClient);
+            TonBotService.sendNotification(bot, Long.toString(ownerTelegramId), messageOwner);
 
         }
 

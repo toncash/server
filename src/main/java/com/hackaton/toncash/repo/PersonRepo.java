@@ -10,4 +10,5 @@ import java.util.stream.Stream;
 @Repository
 public interface PersonRepo extends CrudRepository<Person, Long> {
     Optional<Person> findByUsername(String username);
+    Optional<Person> findByTelegramId(Long telegramId);
 }
