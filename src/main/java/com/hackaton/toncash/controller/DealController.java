@@ -1,14 +1,9 @@
 package com.hackaton.toncash.controller;
 
 import com.hackaton.toncash.dto.DealDTO;
-import com.hackaton.toncash.dto.OrderDTO;
 import com.hackaton.toncash.dto.PersonDealDTO;
-import com.hackaton.toncash.dto.PersonOrderDTO;
-import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.service.DealService;
-import com.hackaton.toncash.service.OrderService;
 import lombok.AllArgsConstructor;
-import org.springframework.data.geo.Point;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,18 +18,23 @@ public class DealController {
         return dealService.createDeal(dealDTO, clientId);
     }
 
-    @PostMapping("{orderId}/deals/{dealId}")
-    public PersonDealDTO acceptDeal(@PathVariable String orderId, @PathVariable String dealId) {
-       return dealService.acceptDeal(orderId, dealId);
+    @DeleteMapping("deals/{dealId}")
+    public void createDeal(@PathVariable String dealId) {
+         dealService.deleteDeal(dealId);
     }
 
-    @PutMapping ("{orderId}/deals/{dealId}")
-    public void denyDeal(@PathVariable String orderId, @PathVariable String dealId) {
-        dealService.denyDeal(orderId, dealId);
+    @PostMapping("deals/{dealId}")
+    public PersonDealDTO acceptDeal(@PathVariable String dealId) {
+       return dealService.acceptDeal(dealId);
     }
-    @GetMapping("{orderId}/deals/{dealId}")
-    public PersonDealDTO getOrderDeal(@PathVariable String orderId, @PathVariable String dealId) {
-        return dealService.getOrderDeal(orderId, dealId);
+
+    @PutMapping ("/deals/{dealId}")
+    public void denyDeal(@PathVariable String dealId) {
+        dealService.denyDeal( dealId);
+    }
+    @GetMapping("deals/{dealId}")
+    public PersonDealDTO getDeal(@PathVariable String dealId) {
+        return dealService.getOrderDeal( dealId);
     }
 
     @GetMapping("{orderId}/deals")

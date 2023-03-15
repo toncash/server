@@ -24,6 +24,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static com.hackaton.toncash.service.CommonMethods.getPersonOrderDTO;
+
 @Service
 @AllArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -50,49 +52,40 @@ public class OrderServiceImpl implements OrderService {
         long personTelegramId = person.getTelegramId();
         String message = "You created order for " + order.getOrderType() + " with " + order.getAmount() + "TON";
 //        TonBotService.sendNotification(bot,Long.toString(personTelegramId), message);
-        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
-        return CommonMethods.mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class), person, deals, modelMapper);
+
+        OrderDTO orderDTO = modelMapper.map(orderRepository.save(order), OrderDTO.class);
+
+        return getPersonOrderDTO(person, orderDTO, modelMapper);
 
     }
+
 
     @Override
     public PersonOrderDTO getOrder(String id) {
         Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
         Person person = personRepository.findById(order.getOwnerId()).orElseThrow(() -> new UserNotFoundException(order.getOwnerId()));
-        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
-
-        return CommonMethods.mapOrderDTOtoPersonOrderDTO(modelMapper.map(order, OrderDTO.class), person, deals, modelMapper);
-
-    }
-
-    private PersonOrderDTO getPersonByOrder(Order order) {
-        Person person = personRepository.findById(order.getOwnerId()).orElseThrow(() -> new UserNotFoundException(order.getOwnerId()));
-        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
-
-        return CommonMethods.mapOrderDTOtoPersonOrderDTO(modelMapper.map(order, OrderDTO.class), person, deals, modelMapper);
+        OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
+        return getPersonOrderDTO(person, orderDTO, modelMapper);
 
     }
+
     @Override
     public Iterable<PersonOrderDTO> getOrders() {
         return StreamSupport.stream(orderRepository.findAll().spliterator(), false)
-                .map(this::getPersonByOrder)
+                .map(this::getPersonOrderDTOByOrder)
                 .collect(Collectors.toList());
     }
 
 
-
     public Iterable<PersonOrderDTO> getOrdersByPersonId(long personId) {
         Person person = personRepository.findById(personId).orElseThrow(() -> new UserNotFoundException(personId));
-        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
 
         Set<String> currentOrders = person.getCurrentOrders();
         return StreamSupport.stream(orderRepository.findAllById(currentOrders).spliterator(), false)
-                .map(order -> CommonMethods.mapOrderDTOtoPersonOrderDTO(
-                        modelMapper.map(order, OrderDTO.class),
+                .map(order -> getPersonOrderDTO(
                         person,
-                        deals,
-                        modelMapper
-                ))
+                        modelMapper.map(order, OrderDTO.class),
+                        modelMapper))
                 .collect(Collectors.toList());
     }
 
@@ -110,7 +103,7 @@ public class OrderServiceImpl implements OrderService {
         List<Order> orders = mongoTemplate.find(query, Order.class);
 
         return orders.stream()
-                .map(this::getPersonByOrder)
+                .map(this::getPersonOrderDTOByOrder)
                 .collect(Collectors.toList());
     }
 
@@ -130,7 +123,8 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
         BeanUtils.copyProperties(orderDTO, order, CommonMethods.getNullPropertyNames(orderDTO));
 
-        return getPersonByOrder(orderRepository.save(order));
+        return getPersonOrderDTOByOrder(order);
+
 
     }
 
@@ -148,5 +142,16 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.save(order);
     }
 
+    private PersonOrderDTO getPersonOrderDTOByOrder(Order order) {
+        Person person = personRepository.findById(order.getOwnerId()).orElseThrow(() -> new UserNotFoundException(order.getOwnerId()));
+        OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
+        return getPersonOrderDTO(person, orderDTO, modelMapper);
+    }
+
+//    private PersonOrderDTO getPersonOrderDTO(OrderDTO orderDTO, Person person) {
+//        Iterable<Deal> deals = dealRepository.findAllById(person.getCurrentDeals());
+//        Iterable<Order> orders = orderRepository.findAllById(person.getCurrentOrders());
+//        return CommonMethods.mapOrderDTOtoPersonOrderDTO(orderDTO, person, orders, deals, modelMapper);
+//    }
 
 }

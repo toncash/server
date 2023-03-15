@@ -1,6 +1,5 @@
 package com.hackaton.toncash.dto;
 
-import com.hackaton.toncash.model.Deal;
 import com.hackaton.toncash.model.OrderLimit;
 import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.model.OrderType;
@@ -26,6 +25,6 @@ public class OrderDTO {
     private OrderLimit limits;
     private OrderType orderType;
     private OrderStatus orderStatus;
-    List<DealDTO> deals;
+    private List<String> deals;
 
 }
