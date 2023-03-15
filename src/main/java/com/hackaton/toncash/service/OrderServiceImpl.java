@@ -26,6 +26,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static com.hackaton.toncash.service.CommonMethods.mapToPersonDTO;
+
 @Service
 @AllArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -90,7 +92,7 @@ public class OrderServiceImpl implements OrderService {
         query.addCriteria(Criteria.where("orderStatus").is(OrderStatus.CURRENT));
         List<Order> orders = mongoTemplate.find(query, Order.class);
 
-        List<Long> personIds = orders.stream().map(Order::getOwnerId).collect(Collectors.toList());
+        List<Long> personIds =  orders.stream().map(Order::getOwnerId).collect(Collectors.toList());
         List<Person> persons = StreamSupport.stream(personRepository.findAllById(personIds).spliterator(), false).collect(Collectors.toList());
 
         Map<Long, Person> personMap = persons.stream().collect(Collectors.toMap(Person::getId, Function.identity()));
@@ -98,11 +100,12 @@ public class OrderServiceImpl implements OrderService {
         return orders.stream()
                 .map(order -> {
                     OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
-                    PersonDTO personDTO = modelMapper.map(personMap.get(order.getOwnerId()), PersonDTO.class);
+                    PersonDTO personDTO = mapToPersonDTO(personMap.get(order.getOwnerId()));
                     return new PersonOrderDTO(personDTO, orderDTO);
                 })
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public void deleteOrder(String id) {

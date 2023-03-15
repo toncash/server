@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static com.hackaton.toncash.service.CommonMethods.mapToPersonDTO;
+
 @Service
 @AllArgsConstructor
 public class PersonServiceImpl implements PersonService {
@@ -65,7 +67,7 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public Iterable<PersonDTO> getPersons() {
         return StreamSupport.stream(personRepository.findAll().spliterator(), false)
-                .map(this::mapToPersonDTO)
+                .map(CommonMethods::mapToPersonDTO)
                 .collect(Collectors.toList());
     }
 
@@ -131,18 +133,5 @@ public class PersonServiceImpl implements PersonService {
                 .collect(Collectors.toList());
     }
 
-    private PersonDTO mapToPersonDTO(Person person) {
-        return PersonDTO.builder()
-                .id(person.getId())
-                .username(person.getUsername())
-                .avatarURL(person.getAvatarURL())
-                .chatId(person.getChatId())
-                .currentOrders(person.getCurrentOrders())
-                .finishedOrders(person.getFinishedOrders().size())
-                .badOrders(person.getBadOrders().size())
-                .currentDeals(person.getCurrentDeals())
-                .community(person.getCommunity())
-                .rank(person.getRank())
-                .build();
-    }
+
 }
