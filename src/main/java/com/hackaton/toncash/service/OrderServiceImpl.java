@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import javax.ws.rs.BadRequestException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -57,21 +58,22 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public PersonOrderDTO getOrder(String id) {
         Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
-        return mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class));
+        return mapOrderDTOtoPersonOrderDTO(modelMapper.map(order, OrderDTO.class));
 
     }
 
     @Override
     public Iterable<PersonOrderDTO> getOrders() {
         return StreamSupport.stream(orderRepository.findAll().spliterator(), false)
-                .map(order -> mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class)))
+                .map(order -> mapOrderDTOtoPersonOrderDTO(modelMapper.map(order, OrderDTO.class)))
                 .collect(Collectors.toList());
     }
 
     public Iterable<PersonOrderDTO> getOrdersByPersonId(long personId) {
-        Set<String> currentOrders = personService.getPerson(personId).getCurrentOrders();
-        return StreamSupport.stream(orderRepository.findAllById(currentOrders).spliterator(), false)
-                .map(order -> mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class)))
+        PersonDTO personDTO = personService.getPerson(personId);
+
+        return StreamSupport.stream(orderRepository.findAllById(personDTO.getCurrentOrders()).spliterator(), false)
+                .map(order -> new PersonOrderDTO(personDTO, modelMapper.map(order, OrderDTO.class)))
                 .collect(Collectors.toList());
     }
 
@@ -88,8 +90,17 @@ public class OrderServiceImpl implements OrderService {
         query.addCriteria(Criteria.where("orderStatus").is(OrderStatus.CURRENT));
         List<Order> orders = mongoTemplate.find(query, Order.class);
 
+        List<Long> personIds = orders.stream().map(Order::getOwnerId).collect(Collectors.toList());
+        List<Person> persons = StreamSupport.stream(personRepository.findAllById(personIds).spliterator(), false).collect(Collectors.toList());
+
+        Map<Long, Person> personMap = persons.stream().collect(Collectors.toMap(Person::getId, Function.identity()));
+
         return orders.stream()
-                .map(order -> mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class)))
+                .map(order -> {
+                    OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
+                    PersonDTO personDTO = modelMapper.map(personMap.get(order.getOwnerId()), PersonDTO.class);
+                    return new PersonOrderDTO(personDTO, orderDTO);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -115,7 +126,7 @@ public class OrderServiceImpl implements OrderService {
 
 
     @Override
-    public void changeOrderStatus(String orderId, long personId, OrderStatus status) {
+    public PersonOrderDTO changeOrderStatus(String orderId, long personId, OrderStatus status) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
         order.setOrderStatus(status);
         if (status.equals(OrderStatus.PENDING)) {
@@ -124,7 +135,7 @@ public class OrderServiceImpl implements OrderService {
 //        if (status.equals(OrderStatus.BAD)) {
 //            rejectOrder(orderId, personId);
 //        }
-        orderRepository.save(order);
+       return mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class));
     }
 
     @Override
@@ -256,8 +267,9 @@ public class OrderServiceImpl implements OrderService {
 
 
     @Override
-    public PersonDealDTO getOrderDeal(String orderId, String dealId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+    public PersonDealDTO getOrderDeal(String dealId) {
+//        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
+        Order order = orderRepository.findOneOrderByDealsId(dealId);
         Deal deal = findDealInList(dealId, order.getDeals());
         return mapDealDTOtoPersonDealDTO(modelMapper.map(deal, DealDTO.class), order);
     }
@@ -275,10 +287,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Iterable<PersonDealDTO> getOrderDeals(String orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
-
+        PersonDTO personDTO = personService.getPerson(order.getOwnerId());
         return order.getDeals().stream()
                 .map(deal -> modelMapper.map(deal, DealDTO.class))
-                .map(d-> mapDealDTOtoPersonDealDTO(d, order))
+                .map(d-> new PersonDealDTO(personDTO, d))
                 .collect(Collectors.toList());
     }
 

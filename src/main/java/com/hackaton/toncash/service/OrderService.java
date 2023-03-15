@@ -22,11 +22,11 @@ public interface OrderService {
 
     PersonOrderDTO changeOrder(String id, OrderDTO orderDTO);
 
-    void changeOrderStatus(String orderId, long personId, OrderStatus status);
+    PersonOrderDTO changeOrderStatus(String orderId, long personId, OrderStatus status);
 
     PersonDealDTO createDeal(DealDTO dealDTO, Long clientId);
 
-    PersonDealDTO getOrderDeal(String orderId, String dealId);
+    PersonDealDTO getOrderDeal(String dealId);
 
     Iterable<PersonDealDTO> getOrderDeals(String orderId);
 

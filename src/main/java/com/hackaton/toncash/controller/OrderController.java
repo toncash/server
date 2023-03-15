@@ -46,8 +46,8 @@ public class OrderController {
 
 
     @PutMapping("{orderId}")
-    public void changeOrderStatus(@PathVariable String orderId, @RequestParam long personId, @RequestParam OrderStatus status) {
-        orderService.changeOrderStatus(orderId, personId, status);
+    public PersonOrderDTO changeOrderStatus(@PathVariable String orderId, @RequestParam long personId, @RequestParam OrderStatus status) {
+        return orderService.changeOrderStatus(orderId, personId, status);
     }
 
 
@@ -74,9 +74,9 @@ public class OrderController {
     public void denyDeal(@PathVariable String orderId, @PathVariable String dealId) {
         orderService.denyDeal(orderId, dealId);
     }
-    @GetMapping("{orderId}/deals/{dealId}")
-    public PersonDealDTO getOrderDeal(@PathVariable String orderId, @PathVariable String dealId) {
-        return orderService.getOrderDeal(orderId, dealId);
+    @GetMapping("deals/{dealId}")
+    public PersonDealDTO getOrderDeal(@PathVariable String dealId) {
+        return orderService.getOrderDeal( dealId);
     }
 
     @GetMapping("{orderId}/deals")
