@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface PersonRepository extends CrudRepository<Person, Long> {
     Optional<Person> findByUsername(String username);
     Optional<Person> findByTelegramId(Long telegramId);
+    Optional<Person> findByCurrentDealsContains(String dealId);
 }

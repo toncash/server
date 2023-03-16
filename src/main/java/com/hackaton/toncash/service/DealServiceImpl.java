@@ -15,8 +15,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.hackaton.toncash.service.CommonMethods.mapToPersonDTO;
@@ -124,7 +131,7 @@ public class DealServiceImpl implements DealService {
             dealOwnerPerson.getCurrentDeals().remove(deal.getId());
             order.getDeals().remove(deal.getId());
         }
-        if (deal.getDealStatus().equals(DealStatus.FINISH) || deal.getDealStatus().equals(DealStatus.PENDING)){
+        if (deal.getDealStatus().equals(DealStatus.FINISH) || deal.getDealStatus().equals(DealStatus.PENDING)) {
             throw new BadRequestException("You can't delete this Deal");
         }
         dealRepository.delete(deal);
@@ -195,19 +202,28 @@ public class DealServiceImpl implements DealService {
 
 
     @Override
-    public PersonDealDTO getOrderDeal(String dealId) {
+    public PersonDealDTO getDeal(String dealId) {
         Deal deal = dealRepository.findById(dealId).orElseThrow(() -> new OrderNotFoundException(dealId));
-        Order order = orderRepository.findById(deal.getOrderId()).orElseThrow(() -> new OrderNotFoundException(deal.getOrderId()));
-        PersonDTO dealOwnerPerson = getPersonDTOByOrder(order, deal);
-        return new PersonDealDTO(dealOwnerPerson, modelMapper.map(deal, DealDTO.class));
+//        Order order = orderRepository.findById(deal.getOrderId()).orElseThrow(() -> new OrderNotFoundException(deal.getOrderId()));
+        Person person = personRepository.findByCurrentDealsContains(dealId).orElseThrow(()-> new NotFoundException("deal not found"));
+        return new PersonDealDTO( mapToPersonDTO(person), modelMapper.map(deal, DealDTO.class));
     }
 
 
     @Override
     public Iterable<PersonDealDTO> getOrderDeals(String orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
-        return StreamSupport.stream(dealRepository.findAllById(order.getDeals()).spliterator(), false)
-                .map(deal -> new PersonDealDTO(getPersonDTOByOrder(order, deal), modelMapper.map(deal, DealDTO.class)))
+        List<Deal> deals = StreamSupport.stream(dealRepository.findAllById(order.getDeals()).spliterator(), false).collect(Collectors.toList());
+
+        Set<Long> personsIds = deals.stream().map(deal -> getDealOwner(deal, order)).collect(Collectors.toSet());
+
+        Map<Long, Person> persons = StreamSupport.stream(personRepository.findAllById(personsIds).spliterator(), false)
+                .collect(Collectors.toMap(Person::getId, Function.identity()));
+
+        return deals.stream()
+                .map(deal -> new PersonDealDTO(
+                        mapToPersonDTO(persons.get(getDealOwner(deal, order))),
+                        modelMapper.map(deal, DealDTO.class)))
                 .collect(Collectors.toList());
     }
 

@@ -34,7 +34,7 @@ public class DealController {
     }
     @GetMapping("deals/{dealId}")
     public PersonDealDTO getDeal(@PathVariable String dealId) {
-        return dealService.getOrderDeal( dealId);
+        return dealService.getDeal( dealId);
     }
 
     @GetMapping("{orderId}/deals")

@@ -4,7 +4,6 @@ import com.hackaton.toncash.dto.OrderDTO;
 import com.hackaton.toncash.dto.PersonDTO;
 import com.hackaton.toncash.dto.PersonOrderDTO;
 import com.hackaton.toncash.model.Person;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 
@@ -47,7 +46,7 @@ public class CommonMethods {
 //                .collect(Collectors.toList());
 //    }
 
-    public static PersonOrderDTO getPersonOrderDTO(Person person, OrderDTO orderDTO, ModelMapper modelMapper) {
+    public static PersonOrderDTO mapPersonOrderDTO(Person person, OrderDTO orderDTO) {
         PersonDTO personDTO = mapToPersonDTO(person);
         return new PersonOrderDTO(personDTO, orderDTO);
     }

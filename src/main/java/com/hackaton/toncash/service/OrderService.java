@@ -22,7 +22,7 @@ public interface OrderService {
 
     PersonOrderDTO changeOrder(String id, OrderDTO orderDTO);
 
-    void changeOrderStatus(String orderId, long personId, OrderStatus status);
+    PersonOrderDTO changeOrderStatus(String orderId, long personId, OrderStatus status);
 
 
 }

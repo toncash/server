@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
 public class Deal {
     @Id
     String id;
+
+//    long ownerId;
     String addressContract;
     String addressBuyer;
     boolean contractDeployed;

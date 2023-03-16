@@ -7,7 +7,7 @@ public interface DealService {
 
     PersonDealDTO createDeal(DealDTO dealDTO, Long clientId);
 
-    PersonDealDTO getOrderDeal(String dealId);
+    PersonDealDTO getDeal(String dealId);
 
     Iterable<PersonDealDTO> getOrderDeals(String orderId);
 

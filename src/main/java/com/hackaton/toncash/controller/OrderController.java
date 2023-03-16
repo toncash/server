@@ -46,8 +46,8 @@ public class OrderController {
 
 
     @PutMapping("{orderId}")
-    public void changeOrderStatus(@PathVariable String orderId, @RequestParam long personId, @RequestParam OrderStatus status) {
-        orderService.changeOrderStatus(orderId, personId, status);
+    public PersonOrderDTO changeOrderStatus(@PathVariable String orderId, @RequestParam long personId, @RequestParam OrderStatus status) {
+       return orderService.changeOrderStatus(orderId, personId, status);
     }
 
 
