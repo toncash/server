@@ -53,6 +53,7 @@ public class DealServiceImpl implements DealService {
 
         orderRepository.save(order);
         personRepository.save(clientPerson);
+        personRepository.save(orderOwnerPerson);
         PersonDTO personDTO = personService.getPerson(clientPerson.getId());
         return new PersonDealDTO(personDTO, modelMapper.map(deal, DealDTO.class));
     }
