@@ -16,8 +16,6 @@ public class PersonController {
 
     @PostMapping("{id}")
     public PersonDTO firstInPerson(@PathVariable long id, @RequestBody PersonDTO personDTO) {
-        System.out.println(personDTO.getChatId());
-        System.out.println(personDTO.getUsername());
         return personService.firstInPerson(id, personDTO);
     }
 
@@ -28,6 +26,7 @@ public class PersonController {
 
     @GetMapping("{id}/deals")
     public Iterable<PersonDealDTO> getDealsByPersonId(@PathVariable Long id) {
+        System.out.println(id);
         return personService.getDealsByPersonId(id);
     }
 }

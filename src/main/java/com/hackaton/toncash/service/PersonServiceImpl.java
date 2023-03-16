@@ -42,7 +42,6 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public PersonDTO firstInPerson(long id, PersonDTO personDTO) {
-        System.out.println(personDTO.getAvatarURL());
         Person person = personRepository.findById(id).orElse(null);
         if (person == null) {
             person = new Person();
@@ -54,9 +53,6 @@ public class PersonServiceImpl implements PersonService {
             if (person.getUsername() == null || !person.getUsername().equals(personDTO.getUsername())) {
                 person.setUsername(personDTO.getUsername());
             }
-            System.out.println(person.getChatId());
-            System.out.println(personDTO.getChatId());
-            System.out.println(person.getChatId() != personDTO.getChatId());
             if (person.getChatId() != personDTO.getChatId()) {
                 person.setChatId(personDTO.getChatId());
             }

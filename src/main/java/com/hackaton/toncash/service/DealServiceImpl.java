@@ -43,10 +43,14 @@ public class DealServiceImpl implements DealService {
         Order order = orderRepository.findById(dealDTO.getOrderId()).orElseThrow(() -> new OrderNotFoundException(dealDTO.getOrderId()));
         Deal deal = madeDeal(order, dealDTO, clientId);
         Person clientPerson = personRepository.findById(clientId).orElseThrow(() -> new UserNotFoundException(clientId));
+        Person orderOwnerPerson = personRepository.findById(order.getOwnerId()).orElseThrow(() -> new UserNotFoundException(order.getOwnerId()));
+
         clientPerson.getCurrentDeals().add(deal);
+        orderOwnerPerson.getCurrentDeals().add(deal);
+        order.getDeals().add(deal);
+
         dealRequest(order, clientPerson, deal);
 
-        order.getDeals().add(deal);
         orderRepository.save(order);
         personRepository.save(clientPerson);
         PersonDTO personDTO = personService.getPerson(clientPerson.getId());
@@ -128,7 +132,7 @@ public class DealServiceImpl implements DealService {
         String messageDealOwner = "You delete the deal with " + orderTypeForClient + " " + deal.getAmount() + "TON";
         String messageOrderOwner = "";
 
-        if (deal.getDealStatus().equals(DealStatus.DENIED)) {
+        if (deal.getDealStatus().equals(DealStatus.DENIED) || deal.getDealStatus().equals(DealStatus.CANCEL)) {
             dealOwnerPerson.getCurrentDeals().remove(deal);
         }
         if (deal.getDealStatus().equals(DealStatus.CURRENT)) {
