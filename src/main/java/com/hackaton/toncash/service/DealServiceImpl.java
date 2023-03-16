@@ -100,7 +100,7 @@ public class DealServiceImpl implements DealService {
     @Override
     public PersonDealDTO acceptDeal(String dealId) {
         Order order = orderRepository.findByDealsId(dealId);
-        Person client = personRepository.findPersonByCurrentDealsId(dealId);
+        Person client = getDealOwner(dealId);
         Deal deal = findDealInList(dealId, order.getDeals());
 
         manageDeal(order, deal, client, true);
@@ -112,7 +112,7 @@ public class DealServiceImpl implements DealService {
     @Override
     public void denyDeal(String dealId) {
         Order order = orderRepository.findByDealsId(dealId);
-        Person client = personRepository.findPersonByCurrentDealsId(dealId);
+        Person client = getDealOwner(dealId);
 
         Deal deal = findDealInList(dealId, order.getDeals());
 
@@ -121,7 +121,7 @@ public class DealServiceImpl implements DealService {
 
     @Override
     public void deleteDeal(String dealId) {
-        Person dealOwnerPerson = personRepository.findPersonByCurrentDealsId(dealId);
+        Person dealOwnerPerson = getDealOwner(dealId);
         Deal deal = findDealInList(dealId, dealOwnerPerson.getCurrentDeals());
         Order order = orderRepository.findById(deal.getOrderId()).orElseThrow(() -> new OrderNotFoundException(deal.getOrderId()));
         Person orderOwner = personRepository.findById(order.getOwnerId()).orElseThrow(() -> new UserNotFoundException(order.getOwnerId()));
@@ -154,7 +154,7 @@ public class DealServiceImpl implements DealService {
 
     @Override
     public PersonDealDTO updateDeal(String dealId, DealDTO dealDTO) {
-        Person dealOwnerPerson = personRepository.findPersonByCurrentDealsId(dealId);
+        Person dealOwnerPerson = getDealOwner(dealId);
         Deal ownerDeal = findDealInList(dealId, dealOwnerPerson.getCurrentDeals());
         dealOwnerPerson.getCurrentDeals().remove(ownerDeal);
 
@@ -232,7 +232,7 @@ public class DealServiceImpl implements DealService {
 
     @Override
     public PersonDealDTO getOrderDeal(String dealId) {
-        Person person = personRepository.findPersonByCurrentDealsId(dealId);
+        Person person = getDealOwner(dealId);
         Deal deal = findDealInList(dealId, person.getCurrentDeals());
         return new PersonDealDTO(mapToPersonDTO(person), modelMapper.map(deal, DealDTO.class));
     }
@@ -255,7 +255,15 @@ public class DealServiceImpl implements DealService {
                         modelMapper.map(deal, DealDTO.class)))
                 .collect(Collectors.toList());
     }
-
+private Person getDealOwner(String dealId){
+    List<Person> personByCurrentDealsId = personRepository.findPersonByCurrentDealsId(dealId);
+    Deal deal = findDealInList(dealId, personByCurrentDealsId.get(0).getCurrentDeals());
+    String orderId = deal.getOrderId();
+    if (personByCurrentDealsId.get(0).getCurrentOrders().contains(orderId)){
+        return personByCurrentDealsId.get(1);
+    }
+    return personByCurrentDealsId.get(0);
+}
 
     private PersonOrderDTO mapOrderDTOtoPersonOrderDTO(OrderDTO orderDTO) {
         PersonDTO personDTO = personService.getPerson(orderDTO.getOwnerId());

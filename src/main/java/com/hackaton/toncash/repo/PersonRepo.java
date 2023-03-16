@@ -12,6 +12,6 @@ import java.util.stream.Stream;
 public interface PersonRepo extends CrudRepository<Person, Long> {
     Optional<Person> findByUsername(String username);
 
-    Person findPersonByCurrentDealsId(String dealId);
+    List<Person> findPersonByCurrentDealsId(String dealId);
     List<Person> findByCurrentDealsContains(List<String> dealsIds);
 }

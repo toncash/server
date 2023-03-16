@@ -47,6 +47,7 @@ public class DealController {
 
     @GetMapping("{dealId}")
     public PersonDealDTO getOrderDeal(@PathVariable String dealId) {
+        System.out.println(dealId);
         return dealService.getOrderDeal(dealId);
     }
 
