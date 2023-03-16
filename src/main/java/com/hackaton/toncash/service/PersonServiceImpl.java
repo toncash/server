@@ -2,6 +2,7 @@ package com.hackaton.toncash.service;
 
 import com.hackaton.toncash.dto.DealDTO;
 import com.hackaton.toncash.dto.PersonDTO;
+import com.hackaton.toncash.dto.PersonDealDTO;
 import com.hackaton.toncash.exception.UserExistException;
 import com.hackaton.toncash.exception.UserNotFoundException;
 import com.hackaton.toncash.model.OrderStatus;
@@ -126,10 +127,10 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public Iterable<DealDTO> getDealsByPersonId(Long personId) {
+    public Iterable<PersonDealDTO> getDealsByPersonId(Long personId) {
         Person person = personRepository.findById(personId).orElseThrow(() -> new UserNotFoundException(personId));
         return person.getCurrentDeals().stream()
-                .map(deal -> modelMapper.map(deal, DealDTO.class))
+                .map(deal -> new PersonDealDTO(mapToPersonDTO(person),modelMapper.map(deal, DealDTO.class)))
                 .collect(Collectors.toList());
     }
 

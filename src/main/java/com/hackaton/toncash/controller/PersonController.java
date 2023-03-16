@@ -2,6 +2,7 @@ package com.hackaton.toncash.controller;
 
 import com.hackaton.toncash.dto.DealDTO;
 import com.hackaton.toncash.dto.PersonDTO;
+import com.hackaton.toncash.dto.PersonDealDTO;
 import com.hackaton.toncash.service.PersonService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class PersonController {
     }
 
     @GetMapping("{id}/deals")
-    public Iterable<DealDTO> getDealsByPersonId(@PathVariable Long id) {
+    public Iterable<PersonDealDTO> getDealsByPersonId(@PathVariable Long id) {
         return personService.getDealsByPersonId(id);
     }
 }
