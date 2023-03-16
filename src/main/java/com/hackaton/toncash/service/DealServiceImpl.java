@@ -2,6 +2,7 @@ package com.hackaton.toncash.service;
 
 import com.hackaton.toncash.dto.*;
 import com.hackaton.toncash.exception.OrderNotFoundException;
+import com.hackaton.toncash.exception.UserExistException;
 import com.hackaton.toncash.exception.UserNotFoundException;
 import com.hackaton.toncash.model.*;
 import com.hackaton.toncash.repo.OrderRepo;
@@ -11,6 +12,7 @@ import com.hackaton.toncash.tgbot.TonCashBot;
 import lombok.AllArgsConstructor;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +60,7 @@ public class DealServiceImpl implements DealService {
                 .dealStatus(DealStatus.CURRENT)
                 .addressContract(dealDTO.getAddressContract())
                 .addressBuyer(dealDTO.getAddressBuyer())
-                .contractDeployed(dealDTO.isContractDeployed())
+                .contractDeployed(dealDTO.getContractDeployed())
                 .amount(dealDTO.getAmount())
                 .orderId(dealDTO.getOrderId())
                 .build();
@@ -118,18 +120,70 @@ public class DealServiceImpl implements DealService {
         Deal deal = findDealInList(dealId, dealOwnerPerson.getCurrentDeals());
         Order order = orderRepository.findById(deal.getOrderId()).orElseThrow(() -> new OrderNotFoundException(deal.getOrderId()));
 
+        String orderTypeForClient = "BUY";
+        if (order.getOrderType().equals(OrderType.BUY)) {
+            orderTypeForClient = "SELL";
+        }
         long dealOwner = getDealOwner(deal, order);
+        String messageDealOwner = "You delete the deal with " + orderTypeForClient + " " + deal.getAmount() + "TON";
+        String messageOrderOwner = "";
+
         if (deal.getDealStatus().equals(DealStatus.DENIED)) {
             dealOwnerPerson.getCurrentDeals().remove(deal);
         }
         if (deal.getDealStatus().equals(DealStatus.CURRENT)) {
             dealOwnerPerson.getCurrentDeals().remove(deal);
             order.getDeals().remove(deal);
+            messageOrderOwner = "User deny his deal with " + orderTypeForClient + " " + deal.getAmount() + "TON";
         }
         if (deal.getDealStatus().equals(DealStatus.FINISH) || deal.getDealStatus().equals(DealStatus.PENDING)) {
             throw new BadRequestException("You can't delete this Deal");
         }
 
+        TonBotService.sendNotification(bot, Long.toString(dealOwnerPerson.getId()), messageDealOwner);
+        if(!messageOrderOwner.isEmpty()){
+            TonBotService.sendNotification(bot, Long.toString(order.getOwnerId()), messageOrderOwner);
+        }
+
+    }
+
+    @Override
+    public PersonDealDTO updateDeal(String dealId, DealDTO dealDTO) {
+        Person dealOwnerPerson = personRepository.findPersonByCurrentDealsId(dealId);
+        Deal ownerDeal = findDealInList(dealId, dealOwnerPerson.getCurrentDeals());
+        dealOwnerPerson.getCurrentDeals().remove(ownerDeal);
+
+        Order order = orderRepository.findById(ownerDeal.getOrderId()).orElseThrow(() -> new OrderNotFoundException(ownerDeal.getOrderId()));
+        Person orderOwnerPerson = personRepository.findById(order.getOwnerId()).orElseThrow(()-> new UserNotFoundException(order.getOwnerId()));
+
+        Deal orderDeal = findDealInList(dealId, order.getDeals());
+        order.getDeals().remove(orderDeal);
+
+
+        Deal updateDeal = CommonMethods.updateEntity(ownerDeal, dealDTO);
+
+        dealOwnerPerson.getCurrentDeals().add(updateDeal);
+        order.getDeals().add(updateDeal);
+
+        if (dealDTO.getDealStatus().equals(DealStatus.CANCEL)){
+            order.getDeals().remove(orderDeal);
+            String messageDealOwner = "The deal with @" + orderOwnerPerson.getUsername() + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON was canceled";
+            String messageOrderOwner = "The deal with @" + dealOwnerPerson.getUsername() + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON was canceled";
+            TonBotService.sendNotification(bot, Long.toString(dealOwnerPerson.getId()), messageDealOwner);
+            TonBotService.sendNotification(bot, Long.toString(orderOwnerPerson.getId()), messageOrderOwner);
+        }
+        if (dealDTO.getDealStatus().equals(DealStatus.FINISH)){
+            order.getDeals().add(updateDeal);
+            String messageDealOwner = "The deal with @" + orderOwnerPerson.getUsername() + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON was finished";
+            String messageOrderOwner = "The deal with @" + dealOwnerPerson.getUsername() + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON was finished";
+            TonBotService.sendNotification(bot, Long.toString(dealOwnerPerson.getId()), messageDealOwner);
+            TonBotService.sendNotification(bot, Long.toString(orderOwnerPerson.getId()), messageOrderOwner);
+
+        }
+
+        orderRepository.save(order);
+        personRepository.save(dealOwnerPerson);
+        return new PersonDealDTO(mapToPersonDTO(dealOwnerPerson), modelMapper.map(ownerDeal, DealDTO.class));
     }
 
     private void manageDeal(Order order, Deal orderDeal, Person client, boolean dealAction) {
@@ -143,7 +197,7 @@ public class DealServiceImpl implements DealService {
         }
 
         if (dealAction) {
-            float amount = order.getAmount();
+            int amount = order.getAmount();
             order.setAmount(amount - orderDeal.getAmount());
             orderDeal.setDealStatus(DealStatus.PENDING);
             clientDeal.setDealStatus(DealStatus.PENDING);
@@ -166,25 +220,6 @@ public class DealServiceImpl implements DealService {
         orderRepository.save(order);
         personRepository.save(client);
     }
-//    public void acceptDeal(long clientId, String dealId, Long ownerOrderId, Long chatId, Integer messageId) {
-//        System.out.println("accept deal");
-//        Order order = orderRepository.findByDealsId(dealId);
-//        Deal deal = findDealInOrder(dealId, order);
-//        float amount = order.getAmount();
-////        order.setAmount(amount-deal.getAmount());
-//        deal.setDealStatus(DealStatus.PENDING);
-////
-//        String clientUsername = personService.getPerson(clientId).getUsername();
-//        String messageOwner = "You accept a client @" + clientUsername + " by the order " + order.getOrderType() + " " + order.getAmount() + "TON";
-//        String orderTypeForClient = "BUY";
-//        if (order.getOrderType().equals(OrderType.BUY)) {
-//            orderTypeForClient = "SELL";
-//        }
-//        String messageClient = "Your offer has been confirmed @" + clientUsername + " by the deal " + orderTypeForClient + " with " + deal.getAmount() + "TON";
-//        TonBotService.sendNotification(bot, Long.toString(clientId), messageClient);
-//        TonBotService.sendEditMassage(bot, chatId, messageId, messageOwner, order.getId(), dealId, clientId);
-//    }
-
 
     @Override
     public PersonDealDTO getOrderDeal(String dealId) {

@@ -1,5 +1,5 @@
 package com.hackaton.toncash.model;
 
 public enum DealStatus {
-    CURRENT, PENDING, DENIED, FINISH, BAD
+    CURRENT, PENDING, DENIED, CANCEL, FINISH, BAD
 }

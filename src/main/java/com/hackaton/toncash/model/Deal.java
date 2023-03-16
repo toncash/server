@@ -17,11 +17,11 @@ public class Deal {
     String id;
     String addressContract;
     String addressBuyer;
-    boolean contractDeployed;
+    Boolean contractDeployed;
     String orderId;
-    long buyerId;
-    long sellerId;
-    float amount;
+    Long buyerId;
+    Long sellerId;
+    Integer amount;
     DealStatus dealStatus;
     private LocalDateTime localDateTime;
 

@@ -5,7 +5,10 @@ import com.hackaton.toncash.dto.PersonDealDTO;
 import com.hackaton.toncash.service.DealService;
 import com.hackaton.toncash.service.OrderService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("api/v1/deals")
@@ -21,21 +24,30 @@ public class DealController {
 
     @PostMapping("{dealId}")
     public PersonDealDTO acceptDeal(@PathVariable String dealId) {
-       return dealService.acceptDeal( dealId);
+        return dealService.acceptDeal(dealId);
     }
 
-    @PutMapping ("{dealId}")
-    public void denyDeal(@PathVariable String dealId) {
-        dealService.denyDeal( dealId);
+    @PutMapping("{dealId}")
+    public ResponseEntity<PersonDealDTO> denyOrUpdateDeal(@PathVariable String dealId, @Valid @RequestBody(required = false) DealDTO dealDTO) {
+        if (dealDTO == null) {
+            dealService.denyDeal(dealId);
+            return ResponseEntity.noContent().build();
+        } else {
+
+            PersonDealDTO updatedDeal = dealService.updateDeal(dealId, dealDTO);
+            return ResponseEntity.ok(updatedDeal);
+        }
+
     }
 
-    @DeleteMapping ("{dealId}")
+    @DeleteMapping("{dealId}")
     public void deleteDeal(@PathVariable String dealId) {
-        dealService.deleteDeal( dealId);
+        dealService.deleteDeal(dealId);
     }
+
     @GetMapping("{dealId}")
     public PersonDealDTO getOrderDeal(@PathVariable String dealId) {
-        return dealService.getOrderDeal( dealId);
+        return dealService.getOrderDeal(dealId);
     }
 
     @GetMapping()

@@ -6,6 +6,8 @@ import com.hackaton.toncash.exception.UserNotFoundException;
 import com.hackaton.toncash.model.*;
 import com.hackaton.toncash.repo.OrderRepo;
 import com.hackaton.toncash.repo.PersonRepo;
+import com.hackaton.toncash.tgbot.TonBotService;
+import com.hackaton.toncash.tgbot.TonCashBot;
 import lombok.AllArgsConstructor;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.hackaton.toncash.service.CommonMethods.mapToPersonDTO;
+import static com.hackaton.toncash.service.CommonMethods.updateEntity;
 
 @Service
 @AllArgsConstructor
@@ -36,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
     private final PersonRepo personRepository;
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
-//    private final TonCashBot bot;
+    private final TonCashBot bot;
 
 
     @Override
@@ -50,8 +53,8 @@ public class OrderServiceImpl implements OrderService {
 
         personService.addOrderToPerson(personId, order.getId());
 
-        String message = "You created order for " + order.getOrderType() + " with " + order.getAmount() + "TON";
-//        TonBotService.sendNotification(bot,Long.toString(personId), message);
+        String message = "You created the order for " + order.getOrderType() + " with " + order.getAmount() + "TON";
+        TonBotService.sendNotification(bot,Long.toString(personId), message);
 
         return mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class));
 
@@ -115,15 +118,17 @@ public class OrderServiceImpl implements OrderService {
 //        } else {
 //            personService.removeOrderFromPerson(order.getSellerId(), order.getId());
 //        }
+        String message = "You delete the order for " + order.getOrderType() + " with " + order.getAmount() + "TON";
+        TonBotService.sendNotification(bot,Long.toString(order.getOwnerId()), message);
+
         orderRepository.delete(order);
     }
 
     @Override
     public PersonOrderDTO changeOrder(String id, OrderDTO orderDTO) {
         Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
-        BeanUtils.copyProperties(orderDTO, order, CommonMethods.getNullPropertyNames(orderDTO));
 
-        return mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(order), OrderDTO.class));
+        return mapOrderDTOtoPersonOrderDTO(modelMapper.map(orderRepository.save(updateEntity(order, orderDTO)), OrderDTO.class));
 
     }
 

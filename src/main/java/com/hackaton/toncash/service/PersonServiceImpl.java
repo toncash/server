@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.hackaton.toncash.service.CommonMethods.mapToPersonDTO;
+import static com.hackaton.toncash.service.CommonMethods.updateEntity;
 
 @Service
 @AllArgsConstructor
@@ -81,9 +82,8 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public PersonDTO changePerson(long id, PersonDTO personDTO) {
         Person person = personRepository.findById(personDTO.getId()).orElseThrow(() -> new UserExistException(id));
-        BeanUtils.copyProperties(personDTO, person, CommonMethods.getNullPropertyNames(personDTO));
 
-        return mapToPersonDTO(personRepository.save(person));
+        return mapToPersonDTO(personRepository.save(updateEntity(person, personDTO)));
 
     }
 

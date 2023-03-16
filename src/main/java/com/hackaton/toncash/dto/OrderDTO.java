@@ -21,9 +21,9 @@ public class OrderDTO {
     private Long buyerId;
     private Long sellerId;
     private LocalDateTime localDateTime;
-    private float amount;
+    private Integer amount;
     private Point location;
-    private float price;
+    private Float price;
     private String currency;
     private OrderLimit limits;
     private OrderType orderType;

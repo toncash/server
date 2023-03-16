@@ -16,4 +16,6 @@ public interface DealService {
     void denyDeal(String dealId);
 
     void deleteDeal(String dealId);
+
+    PersonDealDTO updateDeal(String dealId, DealDTO dealDTO);
 }

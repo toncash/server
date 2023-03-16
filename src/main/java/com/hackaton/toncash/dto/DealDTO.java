@@ -15,11 +15,11 @@ public class DealDTO {
     String id;
     String addressContract;
     String addressBuyer;
-    boolean contractDeployed;
+    Boolean contractDeployed;
     String orderId;
-    long buyerId;
-    long sellerId;
-    int amount;
+    Long buyerId;
+    Long sellerId;
+    Integer amount;
     DealStatus dealStatus;
     private LocalDateTime localDateTime;
 

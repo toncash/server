@@ -14,7 +14,7 @@ import java.util.Set;
 @NonNull
 public class PersonDTO {
     private long id;
-    private long chatId;
+    private Long chatId;
     private String username;
     private String avatarURL;
     private Set<String> currentOrders;

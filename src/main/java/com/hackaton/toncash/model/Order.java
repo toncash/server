@@ -21,10 +21,10 @@ public class Order {
     @Id
     private String id;
     private Long ownerId;
-    private float amount;
+    private Integer amount;
     @GeoSpatialIndexed(name = "location", type = GeoSpatialIndexType.GEO_2DSPHERE)
     private Point location;
-    private float price;
+    private Float price;
     private String currency;
     private OrderType orderType;
     private OrderStatus orderStatus;
