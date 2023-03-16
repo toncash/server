@@ -5,6 +5,8 @@ import com.hackaton.toncash.dto.PersonDTO;
 import com.hackaton.toncash.dto.PersonDealDTO;
 import com.hackaton.toncash.exception.UserExistException;
 import com.hackaton.toncash.exception.UserNotFoundException;
+import com.hackaton.toncash.model.Deal;
+import com.hackaton.toncash.model.Order;
 import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.model.Person;
 import com.hackaton.toncash.repo.PersonRepo;
@@ -13,6 +15,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -129,10 +135,30 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public Iterable<PersonDealDTO> getDealsByPersonId(Long personId) {
         Person person = personRepository.findById(personId).orElseThrow(() -> new UserNotFoundException(personId));
-        return person.getCurrentDeals().stream()
-                .map(deal -> new PersonDealDTO(mapToPersonDTO(person),modelMapper.map(deal, DealDTO.class)))
+        List<Deal> deals = person.getCurrentDeals();
+
+        Set<Long> personsIds = deals.stream()
+                .map(deal ->
+                        getDealClient(deal, person)).collect(Collectors.toSet());
+
+        Map<Long, Person> persons = StreamSupport.stream(personRepository.findAllById(personsIds).spliterator(), false)
+                .collect(Collectors.toMap(Person::getId, Function.identity()));
+
+        return deals.stream()
+                .map(deal -> new PersonDealDTO(
+                        mapToPersonDTO(persons.get(getDealClient(deal, person))),
+                        modelMapper.map(deal, DealDTO.class)))
                 .collect(Collectors.toList());
     }
 
+    private long getDealClient(Deal deal, Person person) {
+        long clientId = person.getId();
+        if (clientId != deal.getBuyerId()) {
+            clientId = deal.getBuyerId();
+        }else {
+            clientId = deal.getSellerId();
+        }
+        return clientId;
+    }
 
 }

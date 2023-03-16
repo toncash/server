@@ -14,7 +14,7 @@ public interface OrderService {
 
     Iterable<PersonOrderDTO> getOrders();
 
-    Iterable<PersonOrderDTO> getOrdersByPersonId(long personId);
+    Iterable<OrderDTO> getOrdersByPersonId(long personId);
 
     Iterable<PersonOrderDTO> getOrdersByLocation(Point point, double distance);
 

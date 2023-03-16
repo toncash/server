@@ -1,13 +1,12 @@
 package com.hackaton.toncash.controller;
 
-import com.hackaton.toncash.dto.DealDTO;
-import com.hackaton.toncash.dto.PersonDealDTO;
 import com.hackaton.toncash.dto.OrderDTO;
 import com.hackaton.toncash.dto.PersonOrderDTO;
 import com.hackaton.toncash.model.OrderStatus;
 import com.hackaton.toncash.service.OrderService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.geo.Point;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -35,12 +34,14 @@ public class OrderController {
     }
 
     @GetMapping
-    public Iterable<PersonOrderDTO> getOrders(@RequestParam(defaultValue = "") Long personId) {
+    public ResponseEntity<?> getOrders(@RequestParam(defaultValue = "") Long personId) {
         if (personId == null) {
-            System.out.println(personId);
-            return orderService.getOrders();
+            Iterable<PersonOrderDTO> orders = orderService.getOrders();
+            return ResponseEntity.ok(orders);
         } else {
-            return orderService.getOrdersByPersonId(personId);
+            Iterable<OrderDTO> orders = orderService.getOrdersByPersonId(personId);
+            return ResponseEntity.ok(orders);
+
         }
     }
 

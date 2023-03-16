@@ -74,11 +74,11 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
     }
 
-    public Iterable<PersonOrderDTO> getOrdersByPersonId(long personId) {
+    public Iterable<OrderDTO> getOrdersByPersonId(long personId) {
         PersonDTO personDTO = personService.getPerson(personId);
 
         return StreamSupport.stream(orderRepository.findAllById(personDTO.getCurrentOrders()).spliterator(), false)
-                .map(order -> new PersonOrderDTO(personDTO, modelMapper.map(order, OrderDTO.class)))
+                .map(order -> modelMapper.map(order, OrderDTO.class))
                 .collect(Collectors.toList());
     }
 
