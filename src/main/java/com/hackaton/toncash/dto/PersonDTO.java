@@ -1,6 +1,7 @@
 package com.hackaton.toncash.dto;
 
 import com.hackaton.toncash.model.Deal;
+import com.hackaton.toncash.model.Person;
 import lombok.*;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class PersonDTO {
     private List<Deal> currentDeals;
     private int finishedOrders;
     private int badOrders;
-    private Set<String> community;
+    private Set<Person> community;
     private float rank;
 
 }

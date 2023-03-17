@@ -29,7 +29,7 @@ public class Person {
     private Set<String> badOrders;
 
     private List<Deal> currentDeals;
-    private Set<String> community;
+    private Set<Person> community;
 
     private PersonLevel level;
     private float rank;
