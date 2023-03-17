@@ -57,7 +57,7 @@ public class OrderController {
         String[] coords = location.split(",");
         double latitude = Double.parseDouble(coords[0]);
         double longitude = Double.parseDouble(coords[1]);
-        return orderService.getOrdersByLocation(new Point(latitude, longitude), distance);
+        return orderService.getOrdersByLocation(new Point( longitude, latitude), distance);
     }
 
 
